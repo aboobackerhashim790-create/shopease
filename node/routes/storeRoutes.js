@@ -1,0 +1,38 @@
+import express from "express";
+import {
+  getProductDetails,
+  listCategories,
+  listProducts,
+} from "../controllers/storeController.js";
+import {
+  addCartItem,
+  addWishlistItem,
+  getCart,
+  getWishlist,
+  removeCartItem,
+  removeWishlistItem,
+  updateCartItem,
+  validateCheckout,
+} from "../controllers/shopperController.js";
+import {
+  requireActiveCustomer,
+  requireSignedIn,
+} from "../middleware/authMiddleware.js";
+
+const router = express.Router();
+
+router.get("/categories", listCategories);
+router.get("/products", listProducts);
+router.get("/products/:slug", getProductDetails);
+
+router.use(requireSignedIn, requireActiveCustomer);
+router.get("/cart", getCart);
+router.post("/cart/items", addCartItem);
+router.patch("/cart/items/:itemId", updateCartItem);
+router.delete("/cart/items/:itemId", removeCartItem);
+router.post("/checkout/validate", validateCheckout);
+router.get("/wishlist", getWishlist);
+router.post("/wishlist/items/:productId", addWishlistItem);
+router.delete("/wishlist/items/:productId", removeWishlistItem);
+
+export default router;
