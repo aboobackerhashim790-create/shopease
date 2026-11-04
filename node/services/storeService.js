@@ -290,7 +290,6 @@ async function getStoreProductDetails(input) {
       .filter((related) =>
         related.variants.length > 0 || related.stockQuantity > 0,
       );
-
     return {
       status: 200,
       body: { product: availableProduct, relatedProducts },

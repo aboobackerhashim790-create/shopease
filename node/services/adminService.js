@@ -791,8 +791,23 @@ async function listProducts(input) {
       return { status: 400, body: { message: "Search must be text." } };
     }
     const search = searchInput?.trim() || "";
+    const categoryId = input.query?.categoryId;
+    const status = input.query?.status || "all";
 
     const filter = {};
+
+    if (categoryId) {
+      if (!mongoose.isValidObjectId(categoryId)) {
+        return { status: 400, body: { message: "Invalid category ID." } };
+      }
+      filter.categoryId = new mongoose.Types.ObjectId(categoryId);
+    }
+
+    if (!["all", "listed", "unlisted"].includes(status)) {
+      return { status: 400, body: { message: "Invalid product status filter." } };
+    }
+    if (status === "listed") filter.active = true;
+    if (status === "unlisted") filter.active = false;
 
     if (search) {
       const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");

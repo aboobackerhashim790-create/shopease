@@ -11,6 +11,7 @@ import {
   uploadProfileImage,
 } from "../config/cloudinary.js";
 import { lookupIndiaPincode } from "../utils/indiaPincode.js";
+import addressSchema from "../schemas/addressSchema.js";
 
 async function updateMyProfile(input) {
   try {
@@ -429,43 +430,6 @@ async function listMyAddresses(input) {
   }
 }
 
-function addressFields(body = {}) {
-  const requiredFields = [
-    "fullName",
-    "phone",
-    "addressLine1",
-    "city",
-    "state",
-    "postalCode",
-    "country",
-  ];
-  if (
-    requiredFields.some(
-      (field) => typeof body[field] !== "string" || !body[field].trim(),
-    )
-  )
-    return null;
-  if (
-    ["label", "addressLine2"].some(
-      (field) => body[field] !== undefined && typeof body[field] !== "string",
-    )
-  )
-    return null;
-  if (body.isDefault !== undefined && typeof body.isDefault !== "boolean")
-    return null;
-  return {
-    label: body.label?.trim() || "Home",
-    fullName: body.fullName?.trim(),
-    phone: body.phone?.trim(),
-    addressLine1: body.addressLine1?.trim(),
-    addressLine2: body.addressLine2?.trim() || "",
-    city: body.city?.trim(),
-    state: body.state?.trim(),
-    postalCode: body.postalCode?.trim(),
-    country: body.country?.trim(),
-  };
-}
-
 function isIndia(country) {
   return (
     typeof country === "string" &&
@@ -511,33 +475,44 @@ async function validateAddressPincode(input) {
     typeof input.params.postalCode === "string"
       ? input.params.postalCode.trim()
       : "";
-  const state =
-    typeof input.query.state === "string" ? input.query.state.trim() : "";
-  if (!state)
+  if (!/^\d{6}$/.test(postalCode))
     return {
       status: 400,
       body: {
-        code: "STATE_REQUIRED",
+        code: "INVALID_PIN_CODE",
       },
       authUserId: input.authUserId,
     };
-  const pinError = await validateIndiaAddress({
-    country: "India",
-    postalCode,
-    state,
-  });
-  if (pinError)
+
+  let location;
+  try {
+    location = await lookupIndiaPincode(postalCode);
+  } catch (error) {
+    console.error("PIN code lookup error:", error.message);
     return {
-      status: pinError.status,
+      status: 503,
       body: {
-        code: pinError.code,
+        code: "PIN_LOOKUP_UNAVAILABLE",
       },
       authUserId: input.authUserId,
     };
+  }
+
+  if (!location)
+    return {
+      status: 404,
+      body: { code: "PIN_CODE_NOT_FOUND" },
+      authUserId: input.authUserId,
+    };
+
   return {
     status: 200,
     body: {
       valid: true,
+      // The postal service provides a district rather than a city field.
+      city: location.districts[0] || "",
+      state: location.states[0] || "",
+      country: "India",
     },
     authUserId: input.authUserId,
   };
@@ -546,15 +521,16 @@ async function validateAddressPincode(input) {
 async function createAddress(input) {
   try {
     const body = input.body || {};
-    const fields = addressFields(body);
-    if (!fields)
+    const validation = addressSchema.safeParse(body);
+    if (!validation.success)
       return {
         status: 400,
         body: {
-          message: "Complete all required address fields.",
+          message: validation.error.issues[0]?.message || "Invalid address details.",
         },
         authUserId: input.authUserId,
       };
+    const fields = validation.data;
     const pinError = await validateIndiaAddress(fields);
     if (pinError)
       return {
@@ -567,7 +543,7 @@ async function createAddress(input) {
     const existingCount = await Address.countDocuments({
       user: input.user._id,
     });
-    const shouldBeDefault = body.isDefault === true || existingCount === 0;
+    const shouldBeDefault = fields.isDefault || existingCount === 0;
     const address = await Address.create({
       ...fields,
       user: input.user._id,
@@ -620,15 +596,16 @@ async function createAddress(input) {
 async function updateAddress(input) {
   try {
     const body = input.body || {};
-    const fields = addressFields(body);
-    if (!fields)
+    const validation = addressSchema.safeParse(body);
+    if (!validation.success)
       return {
         status: 400,
         body: {
-          message: "Complete all required address fields.",
+          message: validation.error.issues[0]?.message || "Invalid address details.",
         },
         authUserId: input.authUserId,
       };
+    const fields = validation.data;
     const pinError = await validateIndiaAddress(fields);
     if (pinError)
       return {
