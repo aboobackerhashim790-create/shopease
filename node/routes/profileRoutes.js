@@ -6,6 +6,7 @@ import {
   verifyEmailChange,
   changeMyPassword,
   listMyAddresses,
+  getMyWallet,
   validateAddressPincode,
   createAddress,
   updateAddress,
@@ -18,6 +19,14 @@ import {
 } from "../middleware/authMiddleware.js";
 import uploadProfileImage from "../middleware/profileImageUpload.js";
 import { otpLimiter } from "../middleware/rateLimiters.js";
+import {
+  listMyOrders,
+  getMyOrder,
+  cancelMyOrder,
+  requestMyOrderReturn,
+  cancelMyOrderItem
+} from "../controllers/customerOrderController.js";
+import { createSupportRequest, listMySupportRequests } from "../controllers/supportController.js";
 
 const router = express.Router();
 router.use(requireSignedIn, requireActiveCustomer);
@@ -27,10 +36,17 @@ router.post("/email-change/request", otpLimiter, requestEmailChange);
 router.post("/email-change/verify", otpLimiter, verifyEmailChange);
 router.patch("/password", changeMyPassword);
 router.get("/addresses", listMyAddresses);
+router.get("/wallet", getMyWallet);
 router.get("/addresses/pincode/:postalCode", validateAddressPincode);
 router.post("/addresses", createAddress);
 router.patch("/addresses/:addressId", updateAddress);
 router.patch("/addresses/:addressId/default", setDefaultAddress);
 router.delete("/addresses/:addressId", deleteAddress);
-
+router.get("/orders", listMyOrders);
+router.get("/orders/:orderId", getMyOrder);
+router.patch("/orders/:orderId/cancel", cancelMyOrder);
+router.post("/orders/:orderId/return", requestMyOrderReturn);
+router.patch("/orders/:orderId/items/:itemIndex/cancel", cancelMyOrderItem);
+router.get("/support", listMySupportRequests);
+router.post("/support", createSupportRequest);
 export default router;

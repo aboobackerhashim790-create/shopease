@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import Category from "../models/Category.js";
 import Product from "../models/Product.js";
 import { getVisibleStoreCategoryIds } from "../utils/storeCategoryVisibility.js";
+import { addCampaignPrices } from "./offerCampaignPricing.js";
 
 function availableStockFilter() {
   return {
@@ -225,10 +226,11 @@ async function listStoreProducts(input) {
     ]);
 
     const totalProducts = result?.count?.[0]?.totalProducts || 0;
+    const products = await addCampaignPrices(result?.products || []);
     return {
       status: 200,
       body: {
-        products: result?.products || [],
+        products,
         pagination: {
           page,
           limit,
@@ -290,9 +292,13 @@ async function getStoreProductDetails(input) {
       .filter((related) =>
         related.variants.length > 0 || related.stockQuantity > 0,
       );
+    const [productWithCampaign, relatedWithCampaigns] = await Promise.all([
+      addCampaignPrices([availableProduct]),
+      addCampaignPrices(relatedProducts),
+    ]);
     return {
       status: 200,
-      body: { product: availableProduct, relatedProducts },
+      body: { product: productWithCampaign[0], relatedProducts: relatedWithCampaigns },
     };
   } catch (error) {
     console.error("Get store product details error:", error);

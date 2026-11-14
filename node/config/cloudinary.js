@@ -1,4 +1,5 @@
 import cloudinaryPackage from "cloudinary";
+import { randomUUID } from "node:crypto";
 const cloudinary = cloudinaryPackage.v2;
 
 function isCloudinaryConfigured() {
@@ -26,8 +27,8 @@ function uploadProfileImage(buffer, userId) {
       .upload_stream(
         {
           folder: "shopease/profiles",
-          public_id: String(userId),
-          overwrite: true,
+          public_id: `${String(userId)}-${randomUUID()}`,
+          overwrite: false,
           resource_type: "image",
         },
         (error, result) => (error ? reject(error) : resolve(result)),

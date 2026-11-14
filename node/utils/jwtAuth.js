@@ -5,7 +5,7 @@ const TOKEN_LIFETIME_SECONDS = 60 * 60 * 24;
 const cookieOptions = {
   httpOnly: true,
   secure: process.env.NODE_ENV === "production",
-  sameSite: "lax",
+  sameSite: process.env.NODE_ENV === "production" ? "none" : "lax",
   path: "/",
   maxAge: TOKEN_LIFETIME_SECONDS * 1000,
 };

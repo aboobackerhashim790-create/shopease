@@ -2,6 +2,7 @@ import mongoose from "mongoose";
 import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 import Address from "../models/Address.js";
+import Wallet from "../models/Wallet.js";
 import EmailChangeChallenge from "../models/EmailChangeChallenge.js";
 import transporter from "../config/mailer.js";
 import { randomInt, timingSafeEqual } from "crypto";
@@ -9,9 +10,11 @@ import { hashVerificationCode } from "../utils/verificationCode.js";
 import {
   isCloudinaryConfigured,
   uploadProfileImage,
+  deleteCloudinaryImage
 } from "../config/cloudinary.js";
 import { lookupIndiaPincode } from "../utils/indiaPincode.js";
 import addressSchema from "../schemas/addressSchema.js";
+
 
 async function updateMyProfile(input) {
   try {
@@ -72,60 +75,86 @@ async function updateProfilePhoto(input) {
   if (!isCloudinaryConfigured()) {
     return {
       status: 503,
-      body: {
-        message: "Profile photo storage is not configured yet.",
-      },
+      body: { message: "Profile photo storage is not configured yet." },
       authUserId: input.authUserId,
     };
   }
-  if (!input.file)
+
+  if (!input.file) {
     return {
       status: 400,
-      body: {
-        message: "Choose a JPG, PNG, or WebP photo up to 5 MB.",
-      },
+      body: { message: "Choose a JPG, PNG, or WebP photo up to 5 MB." },
       authUserId: input.authUserId,
     };
+  }
+
   try {
+    const currentUser = await User.findById(input.user._id)
+      .select("profilePhotoPublicId");
+
+    if (!currentUser) {
+      return {
+        status: 404,
+        body: { message: "Account not found." },
+        authUserId: input.authUserId,
+      };
+    }
+
+    const oldPublicId = currentUser.profilePhotoPublicId;
     const uploaded = await uploadProfileImage(
       input.file.buffer,
       input.user._id,
     );
-    const user = await User.findByIdAndUpdate(
-      input.user._id,
-      {
-        $set: {
-          profilePhotoUrl: uploaded.secure_url,
-          profilePhotoPublicId: uploaded.public_id,
+
+    let user;
+    try {
+      user = await User.findByIdAndUpdate(
+        input.user._id,
+        {
+          $set: {
+            profilePhotoUrl: uploaded.secure_url,
+            profilePhotoPublicId: uploaded.public_id,
+          },
         },
-      },
-      {
-        returnDocument: "after",
-      },
-    ).select("fullName email role personalReferralCode profilePhotoUrl");
-    if (!user)
+        { returnDocument: "after" },
+      ).select("fullName email role personalReferralCode profilePhotoUrl");
+    } catch (saveError) {
+      // The database save failed, so remove the new upload and keep the old photo.
+      await deleteCloudinaryImage(uploaded.public_id).catch((cleanupError) => {
+        console.error("Could not clean up the new profile photo:", cleanupError);
+      });
+      throw saveError;
+    }
+
+    if (!user) {
+      await deleteCloudinaryImage(uploaded.public_id);
       return {
         status: 404,
-        body: {
-          message: "Account not found.",
-        },
+        body: { message: "Account not found." },
         authUserId: input.authUserId,
       };
+    }
+
+    // Delete the old asset only after the new photo is saved successfully.
+    if (oldPublicId && oldPublicId !== uploaded.public_id) {
+      try {
+        await deleteCloudinaryImage(oldPublicId);
+      } catch (deleteError) {
+        // The new photo is saved; log cleanup failure without undoing the update.
+        console.error("Could not delete the previous profile photo:", deleteError);
+      }
+    }
+
     return {
       status: 200,
-      body: {
-        message: "Profile photo updated.",
-        user,
-      },
+      body: { message: "Profile photo updated.", user },
       authUserId: input.authUserId,
     };
   } catch (error) {
     console.error("Profile photo upload error:", error);
     return {
       status: 502,
-      body: {
-        message: "Could not upload your profile photo.",
-      },
+      body: { message: "Could not upload your profile photo." },
       authUserId: input.authUserId,
     };
   }
@@ -430,6 +459,32 @@ async function listMyAddresses(input) {
   }
 }
 
+async function getMyWallet(input) {
+  try {
+    const wallet = await Wallet.findOne({ userId: input.user._id })
+      .select("balance transactions")
+      .lean();
+    const transactions = (wallet?.transactions || []).sort(
+      (a, b) => new Date(b.createdAt) - new Date(a.createdAt),
+    );
+    return {
+      status: 200,
+      body: {
+        balance: wallet?.balance || 0,
+        transactions,
+      },
+      authUserId: input.authUserId,
+    };
+  } catch (error) {
+    console.error("Load wallet error:", error);
+    return {
+      status: 500,
+      body: { message: "Could not load your ShopEase wallet." },
+      authUserId: input.authUserId,
+    };
+  }
+}
+
 function isIndia(country) {
   return (
     typeof country === "string" &&
@@ -522,14 +577,21 @@ async function createAddress(input) {
   try {
     const body = input.body || {};
     const validation = addressSchema.safeParse(body);
-    if (!validation.success)
+    if (!validation.success) {
+      const fieldErrors = Object.fromEntries(
+        validation.error.issues
+          .filter((issue) => issue.path.length > 0)
+          .map((issue) => [String(issue.path[0]), issue.message]),
+      );
       return {
         status: 400,
         body: {
           message: validation.error.issues[0]?.message || "Invalid address details.",
+          fieldErrors,
         },
         authUserId: input.authUserId,
       };
+    }
     const fields = validation.data;
     const pinError = await validateIndiaAddress(fields);
     if (pinError)
@@ -537,6 +599,16 @@ async function createAddress(input) {
         status: pinError.status,
         body: {
           code: pinError.code,
+          fieldErrors: {
+            postalCode:
+              pinError.code === "PIN_CODE_NOT_FOUND"
+                ? "That PIN code was not found."
+                : pinError.code === "PIN_STATE_MISMATCH"
+                  ? "This PIN code does not match the selected state."
+                  : pinError.code === "PIN_LOOKUP_UNAVAILABLE"
+                    ? "PIN lookup is temporarily unavailable."
+                    : "Enter a valid 6-digit Indian PIN code.",
+          },
         },
         authUserId: input.authUserId,
       };
@@ -597,14 +669,21 @@ async function updateAddress(input) {
   try {
     const body = input.body || {};
     const validation = addressSchema.safeParse(body);
-    if (!validation.success)
+    if (!validation.success) {
+      const fieldErrors = Object.fromEntries(
+        validation.error.issues
+          .filter((issue) => issue.path.length > 0)
+          .map((issue) => [String(issue.path[0]), issue.message]),
+      );
       return {
         status: 400,
         body: {
           message: validation.error.issues[0]?.message || "Invalid address details.",
+          fieldErrors,
         },
         authUserId: input.authUserId,
       };
+    }
     const fields = validation.data;
     const pinError = await validateIndiaAddress(fields);
     if (pinError)
@@ -612,6 +691,16 @@ async function updateAddress(input) {
         status: pinError.status,
         body: {
           code: pinError.code,
+          fieldErrors: {
+            postalCode:
+              pinError.code === "PIN_CODE_NOT_FOUND"
+                ? "That PIN code was not found."
+                : pinError.code === "PIN_STATE_MISMATCH"
+                  ? "This PIN code does not match the selected state."
+                  : pinError.code === "PIN_LOOKUP_UNAVAILABLE"
+                    ? "PIN lookup is temporarily unavailable."
+                    : "Enter a valid 6-digit Indian PIN code.",
+          },
         },
         authUserId: input.authUserId,
       };
@@ -809,6 +898,7 @@ export {
   verifyEmailChange,
   changeMyPassword,
   listMyAddresses,
+  getMyWallet,
   validateAddressPincode,
   createAddress,
   updateAddress,

@@ -40,6 +40,11 @@ export async function listMyAddresses(req, res) {
   return res.status(result.status).json(result.body);
 }
 
+export async function getMyWallet(req, res) {
+  const result = await profileService.getMyWallet(makeServiceInput(req));
+  return res.status(result.status).json(result.body);
+}
+
 export async function validateAddressPincode(req, res) {
   const result = await profileService.validateAddressPincode(
     makeServiceInput(req),

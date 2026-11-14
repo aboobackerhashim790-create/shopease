@@ -1,535 +1,8 @@
 import mongoose from "mongoose";
-import User from "../models/User.js";
-import Address from "../models/Address.js";
-import Category from "../models/Category.js";
 import Product from "../models/Product.js";
 import { isCloudinaryConfigured, uploadProductImage } from "../config/cloudinary.js";
 import { getVisibleStoreCategoryIds } from "../utils/storeCategoryVisibility.js";
-
-
-// ---------------------User Management -------------------------
-
-
-async function getCustomerDetails(input) {
-  try {
-    if (!mongoose.isValidObjectId(input.params.userId)) {
-      return {
-        status: 400,
-        body: {
-          message: "Invalid customer ID.",
-        },
-        authUserId: input.authUserId,
-      };
-    }
-    const customer = await User.findOne({
-      _id: input.params.userId,
-      role: "customer",
-    })
-      .select(
-        "fullName email role isVerified isBlocked personalReferralCode profilePhotoUrl createdAt",
-      )
-      .lean();
-    if (!customer)
-      return {
-        status: 404,
-        body: {
-          message: "Customer not found.",
-        },
-        authUserId: input.authUserId,
-      };
-    const addresses = await Address.find({
-      user: customer._id,
-    })
-      .sort({
-        isDefault: -1,
-        createdAt: -1,
-      })
-      .lean();
-    return {
-      status: 200,
-      body: {
-        customer,
-        addresses,
-      },
-      authUserId: input.authUserId,
-    };
-  } catch (error) {
-    console.error("Get customer details error:", error);
-    return {
-      status: 500,
-      body: {
-        message: "Could not load customer details.",
-      },
-      authUserId: input.authUserId,
-    };
-  }
-}
-
-
-
-async function listUsers(input) {
-  try {
-    const blockedFilter = {
-      role: "customer",
-      isBlocked: true,
-    };
-    const blockedUsersCount = await User.countDocuments(blockedFilter);
-    const page = Math.max(Number.parseInt(input.query.page, 10) || 1, 1);
-    const requestedLimit = Number.parseInt(input.query.limit, 10) || 10;
-    const limit = Math.min(Math.max(requestedLimit, 1), 50);
-    const searchInput = input.query?.search;
-    if (searchInput !== undefined && typeof searchInput !== "string") {
-      return { status: 400, body: { message: "Search must be text." } };
-    }
-    const search = searchInput?.trim() || "";
-    const sort = input.query.sort === "oldest" ? "oldest" : "latest";
-    const sortDirection = sort === "oldest" ? 1 : -1;
-    const userFilter = {
-      role: "customer",
-    };
-    if (input.query.status === "blocked") {
-      userFilter.isBlocked = true;
-    } else if (input.query.status === "active") {
-      userFilter.isBlocked = false;
-    }
-    if (search) {
-      const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-      userFilter.$or = [
-        {
-          fullName: {
-            $regex: safeSearch,
-            $options: "i",
-          },
-        },
-        {
-          email: {
-            $regex: safeSearch,
-            $options: "i",
-          },
-        },
-      ];
-    }
-    const [users, totalUsers] = await Promise.all([
-      User.find(userFilter)
-        .select("fullName email role isVerified isBlocked createdAt")
-        .sort({
-          createdAt: sortDirection,
-        })
-        .skip((page - 1) * limit)
-        .limit(limit)
-        .lean(),
-      User.countDocuments(userFilter),
-    ]);
-    return {
-      status: 200,
-      body: {
-        users,
-        count: blockedUsersCount,
-        pagination: {
-          page,
-          limit,
-          totalUsers,
-          totalPages: Math.ceil(totalUsers / limit),
-        },
-      },
-      authUserId: input.authUserId,
-    };
-  } catch (error) {
-    console.error("Get users error:", error);
-    return {
-      status: 500,
-      body: {
-        message: "Could not load users.",
-      },
-      authUserId: input.authUserId,
-    };
-  }
-}
-
-async function blockUser(input) {
-  try {
-    const { isBlocked } = input.body || {};
-    if (typeof isBlocked !== "boolean") {
-      return {
-        status: 400,
-        body: {
-          message: "isBlocked must be true or false.",
-        },
-        authUserId: input.authUserId,
-      };
-    }
-    if (!mongoose.isValidObjectId(input.params.userId)) {
-      return {
-        status: 400,
-        body: {
-          message: "Invalid user ID.",
-        },
-        authUserId: input.authUserId,
-      };
-    }
-    const user = await User.findOneAndUpdate(
-      {
-        _id: input.params.userId,
-        role: "customer",
-      },
-      {
-        $set: {
-          isBlocked,
-        },
-      },
-      {
-        returnDocument: "after",
-        runValidators: true,
-      },
-    ).select("fullName email role isBlocked");
-    if (!user) {
-      return {
-        status: 404,
-        body: {
-          message: "Customer not found.",
-        },
-        authUserId: input.authUserId,
-      };
-    }
-    return {
-      status: 200,
-      body: {
-        message: isBlocked ? "Customer blocked." : "Customer unblocked.",
-        user,
-      },
-      authUserId: input.authUserId,
-    };
-  } catch (error) {
-    console.error("Update customer block status error:", error);
-    return {
-      status: 500,
-      body: {
-        message: "Could not update customer status.",
-      },
-      authUserId: input.authUserId,
-    };
-  }
-}
-
-//------------------ Category Management -------------------------------
-
-async function createCategory(input) {
-  try {
-    const { name, slug, active = true, sortOrder = 0, parentCategoryId } = input.body || {};
-    if (typeof name !== "string" || !name.trim() || typeof slug !== "string" || !slug.trim()) {
-      return {
-        status: 400,
-        body: {
-          message: "Name and Slug are required"
-        }
-      }
-    }
-
-    if (typeof active !== "boolean" || !Number.isFinite(Number(sortOrder))) {
-      return { status: 400, body: { message: "Active must be true or false and sort order must be a number." } };
-    }
-    if (Number(sortOrder) < 0 || name.trim().length > 120 || slug.trim().length > 160 ||
-        !/^[a-z0-9]+(?:-[a-z0-9]+)*$/i.test(slug.trim())) {
-      return { status: 400, body: { message: "Use a name up to 120 characters, a valid URL slug, and a non-negative sort order." } };
-    }
-
-    if (parentCategoryId && !mongoose.isValidObjectId(parentCategoryId)) {
-      return {
-        status: 400,
-        body: { message: "Invalid parent category ID." },
-      };
-    }
-
-    const visibleCategoryIds = await getVisibleStoreCategoryIds();
-    if (parentCategoryId && !visibleCategoryIds.some((id) => String(id) === String(parentCategoryId))) {
-      return {
-        status: 404,
-        body: { message: "Active parent category not found." },
-      };
-    }
-
-    const pendingCategory = await Category.findOne({
-      $or: [
-        caseInsensitiveExact("name", name.trim()),
-        caseInsensitiveExact("slug", slug.trim().toLowerCase()),
-      ],
-    });
-
-    if (pendingCategory) {
-      return {
-        status: 409,
-        body: {
-          message: "A category with this name and slug already exists"
-        }
-      }
-    }
-
-    const category = await Category.create({
-      name: name.trim(),
-      slug: slug.trim().toLowerCase(),
-      active,
-      sortOrder: Number(sortOrder),
-      parentCategoryId: parentCategoryId || null,
-    })
-    return {
-      status: 201,
-      body: { message: "Category created." },
-    };
-
-  } catch (error) {
-    console.error("Create category error:", error);
-    if (error.code === 11000) return { status: 409, body: { message: "A category with this name or slug already exists." } };
-
-    return {
-      status: 500,
-      body: {
-        message: "Could not create category.",
-      },
-    };
-
-  }
-}
-
-async function listCategory(input) {
-  try {
-    const searchInput = input.query?.search;
-    if (searchInput !== undefined && typeof searchInput !== "string") {
-      return { status: 400, body: { message: "Search must be text." } };
-    }
-    const search = searchInput?.trim() || "";
-
-    const safeSearch = search.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-    const filter = search
-      ? { name: { $regex: safeSearch, $options: "i" } }
-      : {};
-
-    const page = Math.max(Number.parseInt(input.query.page, 10) || 1, 1);
-    const requestedLimit = Number.parseInt(input.query.limit, 10) || 10;
-    const limit = Math.min(Math.max(requestedLimit, 1), 50);
-    const skip = (page - 1) * limit;
-
-
-    const sortOrderDirection =
-      input.query.sortOrderDirection === "desc" ? -1 : 1;
-
-    const createdAtDirection = input.query.createdAtDirection === "asc" ? 1 : -1;
-
-    const [categories, totalCategories] = await Promise.all([
-      Category.find(filter)
-        .sort({ sortOrder: sortOrderDirection, createdAt: createdAtDirection })
-        .skip(skip)
-        .limit(limit)
-        .lean(),
-      Category.countDocuments(filter),
-    ]);
-
-    const catogeriesWithChildCount = await Promise.all(
-      categories.map(async (category) => {
-        const childCount = await Category.countDocuments({
-          parentCategoryId: category._id
-        })
-        return {
-          ...category,
-          childCount
-        }
-      })
-    )
-    return {
-      status: 200,
-      body: {
-        categories: catogeriesWithChildCount,
-        pagination: {
-          page,
-          limit,
-          totalCategories,
-          totalPages: Math.ceil(totalCategories / limit),
-        },
-      },
-    }
-  } catch (error) {
-    console.error("Get categorie error:", error);
-
-
-    return {
-      status: 500,
-      body: { message: "Could not load categories" }
-    }
-  }
-}
-
-async function editCategry(input) {
-  try {
-    const { name, sortOrder, slug, active, _id, parentCategoryId } = input.body || {};
-
-    if (typeof name !== "string" || !name.trim() || typeof slug !== "string" || !slug.trim()) {
-      return {
-        status: 400,
-        body: { message: "Name and slug are required." },
-      };
-    }
-    if (name.trim().length > 120 || slug.trim().length > 160 ||
-        !/^[a-z0-9]+(?:-[a-z0-9]+)*$/i.test(slug.trim())) {
-      return { status: 400, body: { message: "Category name or URL slug is invalid or too long." } };
-    }
-
-    if (!mongoose.isValidObjectId(_id)) {
-      return {
-        status: 400,
-        body: { message: "Invalid category ID." },
-      };
-    }
-
-    if (active !== undefined && typeof active !== "boolean") {
-      return { status: 400, body: { message: "Active must be true or false." } };
-    }
-    if (sortOrder !== undefined && (!Number.isFinite(Number(sortOrder)) || Number(sortOrder) < 0)) {
-      return { status: 400, body: { message: "Sort order must be a non-negative number." } };
-    }
-
-    const normalizedParentCategoryId = parentCategoryId || null;
-    if (
-      normalizedParentCategoryId &&
-      !mongoose.isValidObjectId(normalizedParentCategoryId)
-    ) {
-      return {
-        status: 400,
-        body: { message: "Invalid parent category ID." },
-      };
-    }
-
-    if (normalizedParentCategoryId && normalizedParentCategoryId.toString() === _id) {
-      return {
-        status: 400,
-        body: { message: "A category cannot be its own parent." },
-      };
-    }
-
-    if (normalizedParentCategoryId) {
-      let ancestorId = normalizedParentCategoryId;
-      const visited = new Set();
-      while (ancestorId) {
-        const ancestorKey = String(ancestorId);
-        if (ancestorKey === String(_id) || visited.has(ancestorKey)) {
-          return { status: 400, body: { message: "This parent would create a category cycle." } };
-        }
-        visited.add(ancestorKey);
-        const ancestor = await Category.findById(ancestorId).select("parentCategoryId").lean();
-        ancestorId = ancestor?.parentCategoryId || null;
-      }
-    }
-
-    const visibleCategoryIds = await getVisibleStoreCategoryIds();
-    if (normalizedParentCategoryId && !visibleCategoryIds.some((id) => String(id) === String(normalizedParentCategoryId))) {
-      return {
-        status: 404,
-        body: { message: "Active parent category not found." },
-      };
-    }
-
-    const trimmedName = name.trim();
-    const trimmedSlug = slug.trim().toLowerCase();
-    const anotherCategoryWithName = await Category.findOne({
-      ...caseInsensitiveExact("name", trimmedName),
-      _id: { $ne: _id },
-    });
-
-    if (anotherCategoryWithName) {
-      return {
-        status: 409,
-        body: { message: "Another category already uses this name." },
-      };
-    }
-
-    const anotherCategoryWithSlug = await Category.findOne({
-      ...caseInsensitiveExact("slug", trimmedSlug),
-      _id: { $ne: _id },
-    });
-
-    if (anotherCategoryWithSlug) {
-      return {
-        status: 409,
-        body: { message: "Another category already uses this slug." },
-      };
-    }
-
-    const category = await Category.findByIdAndUpdate(
-      _id,
-      {
-        $set: {
-          name: trimmedName,
-          slug: trimmedSlug,
-          ...(sortOrder !== undefined ? { sortOrder: Number(sortOrder) } : {}),
-          ...(active !== undefined ? { active } : {}),
-          parentCategoryId: normalizedParentCategoryId,
-        },
-      },
-      {
-        new: true,
-        runValidators: true,
-      },
-    );
-
-    if (!category) {
-      return {
-        status: 404,
-        body: { message: "Category not found." },
-      };
-    }
-
-    return {
-      status: 200,
-      body: { message: "Category updated successfully." },
-    };
-  } catch (error) {
-    console.error("Update category error:", error);
-    if (error.code === 11000) return { status: 409, body: { message: "Another category already uses this name or slug." } };
-    return {
-      status: 500,
-      body: { message: "Could not update category." },
-    };
-  }
-}
-
-async function deleteCategory(input) {
-  try {
-    const { categoryId } = input.params;
-
-    if (!mongoose.isValidObjectId(categoryId)) {
-      return {
-        status: 400,
-        body: { message: "Invalid category ID." },
-      };
-    }
-
-    // Category deletion is a soft delete: products remain in the database,
-    // while storefront queries exclude products in inactive categories.
-    const category = await Category.findByIdAndUpdate(
-      categoryId,
-      { $set: { active: false } },
-      { returnDocument: "after", runValidators: true },
-    );
-
-    if (!category) {
-      return {
-        status: 404,
-        body: { message: "Category not found." },
-      };
-    }
-
-    return {
-      status: 200,
-      body: { message: "Category unlisted." },
-    };
-  } catch (error) {
-    console.error("Delete category error:", error);
-    return {
-      status: 500,
-      body: { message: "Could not delete category." },
-    };
-  }
-}
-
-//---------------------------------------Product Management-------------------------------------------
+import { caseInsensitiveExact } from "./adminSharedService.js";
 
 function parseNonNegativeNumber(value, field, { integer = false, optional = false } = {}) {
   if (optional && (value === undefined || value === null || value === "")) {
@@ -542,10 +15,6 @@ function parseNonNegativeNumber(value, field, { integer = false, optional = fals
   return { value: number };
 }
 
-function caseInsensitiveExact(field, value) {
-  const escaped = value.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
-  return { [field]: { $regex: `^${escaped}$`, $options: "i" } };
-}
 
 function validateImageList(images, { minimum = 2, maximum = 5, field = "Product images" } = {}) {
   if (!Array.isArray(images) || images.length < minimum || images.length > maximum) {
@@ -569,7 +38,7 @@ function normalizeProductFields(body, { requireAll = false } = {}) {
   const requiredText = ["name", "slug", "description"];
   for (const field of requiredText) {
     if ((requireAll || body[field] !== undefined) &&
-        (typeof body[field] !== "string" || !body[field].trim())) {
+      (typeof body[field] !== "string" || !body[field].trim())) {
       return { error: `${field[0].toUpperCase()}${field.slice(1)} is required.` };
     }
     if (typeof body[field] === "string") normalized[field] = body[field].trim();
@@ -578,8 +47,8 @@ function normalizeProductFields(body, { requireAll = false } = {}) {
     return { error: "Name, slug, or description is longer than allowed." };
   }
 
-    if (normalized.slug) normalized.slug = normalized.slug.toLowerCase();
-    if (normalized.slug && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(normalized.slug)) {
+  if (normalized.slug) normalized.slug = normalized.slug.toLowerCase();
+  if (normalized.slug && !/^[a-z0-9]+(?:-[a-z0-9]+)*$/.test(normalized.slug)) {
     return { error: "Slug may contain letters, numbers, and single hyphens only." };
   }
   if (normalized.brand !== undefined && typeof normalized.brand !== "string") {
@@ -617,13 +86,13 @@ function normalizeProductFields(body, { requireAll = false } = {}) {
     normalized.images = normalized.images.map((url) => url.trim());
   }
   if (normalized.tags !== undefined &&
-      (!Array.isArray(normalized.tags) || normalized.tags.some((tag) => typeof tag !== "string"))) {
+    (!Array.isArray(normalized.tags) || normalized.tags.some((tag) => typeof tag !== "string"))) {
     return { error: "Tags must be an array of text values." };
   }
   if (normalized.tags) normalized.tags = normalized.tags.map((tag) => tag.trim()).filter(Boolean);
   if (normalized.specifications !== undefined &&
-      (!normalized.specifications || typeof normalized.specifications !== "object" || Array.isArray(normalized.specifications) ||
-       Object.values(normalized.specifications).some((value) => typeof value !== "string"))) {
+    (!normalized.specifications || typeof normalized.specifications !== "object" || Array.isArray(normalized.specifications) ||
+      Object.values(normalized.specifications).some((value) => typeof value !== "string"))) {
     return { error: "Specifications must be an object of text values." };
   }
 
@@ -656,7 +125,7 @@ function normalizeProductFields(body, { requireAll = false } = {}) {
       }
       const optionValues = variant.options || {};
       if (!optionValues || typeof optionValues !== "object" || Array.isArray(optionValues) ||
-          [optionValues.color, optionValues.storage].some((value) => value !== undefined && typeof value !== "string")) {
+        [optionValues.color, optionValues.storage].some((value) => value !== undefined && typeof value !== "string")) {
         return { error: "Variant color and storage options must be text." };
       }
       const variantImages = variant.images ?? [];
@@ -699,6 +168,8 @@ async function validateProductCategory(categoryId) {
     ? null
     : "Active category (with active parent categories) not found.";
 }
+
+//---------------------------------------Product Management-------------------------------------------
 
 async function uploadProductImages(input) {
   if (!isCloudinaryConfigured()) {
@@ -791,6 +262,7 @@ async function listProducts(input) {
       return { status: 400, body: { message: "Search must be text." } };
     }
     const search = searchInput?.trim() || "";
+    const sort = input.query?.sort || "newest";
     const categoryId = input.query?.categoryId;
     const status = input.query?.status || "all";
 
@@ -802,7 +274,16 @@ async function listProducts(input) {
       }
       filter.categoryId = new mongoose.Types.ObjectId(categoryId);
     }
-
+    if (!["newest", "oldest"].includes(sort)) {
+      return {
+        status: 400,
+        body: { message: "Invalid product sort option." },
+      };
+    }
+    const sortOrder =
+      sort === "oldest"
+        ? { createdAt: 1, _id: 1 }
+        : { createdAt: -1, _id: -1 };
     if (!["all", "listed", "unlisted"].includes(status)) {
       return { status: 400, body: { message: "Invalid product status filter." } };
     }
@@ -830,7 +311,7 @@ async function listProducts(input) {
     const [products, totalProducts] = await Promise.all([
       Product.find(filter)
         .populate("categoryId", "name")
-        .sort({ createdAt: -1 })
+        .sort(sortOrder)
         .skip(skip)
         .limit(limit)
         .lean(),
@@ -1042,4 +523,5 @@ async function updateProduct(input) {
     };
   }
 }
-export { listUsers, blockUser, getCustomerDetails, createCategory, listCategory, editCategry, deleteCategory, createProduct, listProducts, unlistProduct, deleteProduct, updateProduct, uploadProductImages };
+
+export { createProduct, listProducts, unlistProduct, deleteProduct, updateProduct, uploadProductImages };

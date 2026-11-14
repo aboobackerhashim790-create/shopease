@@ -3,6 +3,13 @@ import Cart from "../models/Cart.js";
 import Product from "../models/Product.js";
 import Wishlist from "../models/Wishlist.js";
 import { getVisibleStoreCategoryIds } from "../utils/storeCategoryVisibility.js";
+import Address from "../models/Address.js";
+import Wallet from "../models/Wallet.js";
+import {
+  getActiveCampaigns,
+  priceWithActiveCampaign,
+  priceWithCampaigns,
+} from "./offerCampaignPricing.js";
 
 const MAX_CART_ITEMS = 9;
 
@@ -20,7 +27,7 @@ async function findPurchasableProduct(productId) {
 
 
 
-function resolvePurchaseOption(product, variantId) {
+async function resolvePurchaseOption(product, variantId, campaigns = null) {
   if (!product?.categoryId) return null;
   if (product.variants?.length) {
     if (!mongoose.isValidObjectId(variantId)) return null;
@@ -28,30 +35,39 @@ function resolvePurchaseOption(product, variantId) {
       (item) => String(item._id) === String(variantId) && item.active !== false,
     );
     if (!variant || variant.stockQuantity <= 0) return null;
+    const campaignPrice = campaigns
+      ? priceWithCampaigns(product, variant.price, campaigns)
+      : await priceWithActiveCampaign(product, variant.price);
     return {
       variant,
       stock: variant.stockQuantity,
-      price: variant.price,
-      compareAtPrice: variant.compareAtPrice,
+      price: campaignPrice.price,
+      compareAtPrice: campaignPrice.compareAtPrice ?? variant.compareAtPrice,
+      campaignName: campaignPrice.campaignName,
     };
   }
   if (variantId || product.stockQuantity <= 0) return null;
+  const campaignPrice = campaigns
+    ? priceWithCampaigns(product, product.price, campaigns)
+    : await priceWithActiveCampaign(product, product.price);
   return {
     variant: null,
     stock: product.stockQuantity,
-    price: product.price,
-    compareAtPrice: product.compareAtPrice,
+    price: campaignPrice.price,
+    compareAtPrice: campaignPrice.compareAtPrice ?? product.compareAtPrice,
+    campaignName: campaignPrice.campaignName,
   };
 }
 
 async function loadCart(userId) {
   const cart = await Cart.findOne({ userId }).lean();
   if (!cart) return { items: [], total: 0, totalQuantity: 0, hasInvalidItems: false, exceedsMaximum: false, canCheckout: false };
+  const campaigns = await getActiveCampaigns();
 
   const items = await Promise.all(
     cart.items.map(async (line) => {
       const product = await findPurchasableProduct(line.productId);
-      const option = resolvePurchaseOption(product, line.variantId);
+      const option = await resolvePurchaseOption(product, line.variantId, campaigns);
       const available = Boolean(option && line.quantity <= option.stock);
       return {
         _id: line._id,
@@ -102,10 +118,88 @@ async function getCart(input) {
     return invalid(500, "Could not load your cart.");
   }
 }
+async function getCheckoutSummary(input) {
+  try {
+    const buyNow = input.query?.buyNow === "true";
+    const [addresses, cart, wallet] = await Promise.all([
+      Address.find({ user: input.user._id })
+        .sort({ isDefault: -1, createdAt: -1 })
+        .lean(),
 
+      buyNow
+        ? loadBuyNowCart(input.user._id, input.query)
+        : loadCart(input.user._id),
+      Wallet.findOne({ userId: input.user._id }).select("balance").lean(),
+    ]);
+
+    const defaultAddress =
+      addresses.find((address) => address.isDefault) || addresses[0] || null;
+
+    return {
+      status: 200,
+      body: {
+        addresses,
+        selectedAddressId: defaultAddress?._id || null,
+        cart,
+        shippingAmount: 0,
+        taxAmount: 0,
+        totalAmount: cart.total,
+        walletBalance: wallet?.balance || 0,
+        maxCartItems: MAX_CART_ITEMS,
+      },
+    };
+  } catch (error) {
+    console.error("Get checkout summary error:", error);
+    return invalid(error.status || 500, error.status ? error.message : "Could not load checkout information.");
+  }
+}
+
+async function loadBuyNowCart(userId, selection = {}) {
+  const quantity = Number(selection.quantity || 1);
+  if (!mongoose.isValidObjectId(selection.productId)) {
+    throw Object.assign(new Error("Choose a valid product."), { status: 400 });
+  }
+  if (!Number.isInteger(quantity) || quantity < 1 || quantity > MAX_CART_ITEMS) {
+    throw Object.assign(new Error(`Quantity must be between 1 and ${MAX_CART_ITEMS}.`), { status: 400 });
+  }
+
+  const product = await findPurchasableProduct(selection.productId);
+  const option = await resolvePurchaseOption(product, selection.variantId || null);
+  if (!option || quantity > option.stock) {
+    throw Object.assign(new Error("This product option is unavailable or has insufficient stock."), { status: 409 });
+  }
+
+  const line = {
+    _id: `buy-now-${product._id}-${selection.variantId || "base"}`,
+    quantity,
+    product: {
+      _id: product._id,
+      name: product.name,
+      slug: product.slug,
+      images: product.images,
+      active: product.active,
+      category: product.categoryId,
+    },
+    variant: option.variant,
+    unitPrice: option.price,
+    itemTotal: option.price * quantity,
+    available: true,
+    availableStock: option.stock,
+    message: "",
+  };
+
+  return {
+    items: [line],
+    total: line.itemTotal,
+    totalQuantity: quantity,
+    hasInvalidItems: false,
+    exceedsMaximum: false,
+    canCheckout: true,
+  };
+}
 async function validateCheckout(input) {
   try {
-    // Reload everything from MongoDB so client-supplied prices/stock are never used.
+
     const cart = await loadCart(input.user._id);
     if (cart.items.length === 0) {
       return { status: 400, body: { message: "Your cart is empty.", cart, maxCartItems: MAX_CART_ITEMS } };
@@ -146,7 +240,7 @@ async function addCartItem(input) {
     }
     const product = await findPurchasableProduct(productId);
     if (!product?.categoryId) return invalid(404, "Product is unavailable.");
-    const option = resolvePurchaseOption(product, variantId);
+    const option = await resolvePurchaseOption(product, variantId);
     if (!option) return invalid(409, "This product option is unavailable.");
 
     let cart = await Cart.findOne({ userId: input.user._id });
@@ -200,7 +294,7 @@ async function updateCartItem(input) {
       return invalid(400, `Your cart can contain at most ${MAX_CART_ITEMS} items total.`);
     }
     const product = await findPurchasableProduct(line.productId);
-    const option = resolvePurchaseOption(product, line.variantId);
+    const option = await resolvePurchaseOption(product, line.variantId);
     // Reducing quantity is always allowed, including when its option has sold out.
     if (!option && quantity >= line.quantity) {
       return invalid(409, "This product option is unavailable. You can reduce or remove it from your cart.");
@@ -238,4 +332,4 @@ async function removeCartItem(input) {
   }
 }
 
-export { getCart, addCartItem, updateCartItem, removeCartItem, validateCheckout };
+export { getCart, getCheckoutSummary, addCartItem, updateCartItem, removeCartItem, validateCheckout, loadBuyNowCart };

@@ -1,6 +1,5 @@
 import Category from "../models/Category.js";
 
-// A category is storefront-visible only when it and each of its ancestors are active.
 async function getVisibleStoreCategoryIds() {
   const categories = await Category.find({ active: true })
     .select("_id parentCategoryId")
@@ -10,7 +9,7 @@ async function getVisibleStoreCategoryIds() {
 
   function hasActiveAncestors(category, path = new Set()) {
     const id = String(category._id);
-    if (path.has(id)) return false; // Defensive guard against a category-parent cycle.
+    if (path.has(id)) return false;
     if (!category.parentCategoryId) return true;
     const parentId = String(category.parentCategoryId);
     const parent = byId.get(parentId);

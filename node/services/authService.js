@@ -154,18 +154,38 @@ async function signup(input) {
   let normalizedEmail;
   try {
     const { fullName, email, referralCode, password } = input.body || {};
-    if (
-      typeof fullName !== "string" ||
-      !fullName.trim() ||
-      typeof email !== "string" ||
-      !email.trim() ||
-      typeof password !== "string" ||
-      !password
-    ) {
+    const requiredFieldErrors = {};
+    if (typeof fullName !== "string" || !fullName.trim()) {
+      requiredFieldErrors.fullName = "Full name is required.";
+    }
+    if (typeof email !== "string" || !email.trim()) {
+      requiredFieldErrors.email = "Email address is required.";
+    }
+    if (typeof password !== "string" || !password) {
+      requiredFieldErrors.password = "Password is required.";
+    }
+    if (Object.keys(requiredFieldErrors).length > 0) {
       return {
         status: 400,
         body: {
           message: "Full name, email, and password are required.",
+          fieldErrors: requiredFieldErrors,
+        },
+        authUserId: input.authUserId,
+      };
+    }
+    const normalizedFullName = fullName.trim().replace(/\s+/g, " ");
+    const validNamePattern = /^[\p{L}\p{M}]+(?:[ '\u2019.-][\p{L}\p{M}]+)*$/u;
+    if (
+      !validator.isLength(normalizedFullName, { min: 2, max: 100 }) ||
+      !validNamePattern.test(normalizedFullName)
+    ) {
+      return {
+        status: 400,
+        body: {
+          message:
+            "Enter a valid full name using letters and normal name separators only.",
+          fieldErrors: { fullName: "Enter a valid full name using letters and normal name separators only." },
         },
         authUserId: input.authUserId,
       };
@@ -175,6 +195,7 @@ async function signup(input) {
         status: 400,
         body: {
           message: "Password must be at least 8 characters.",
+          fieldErrors: { password: "Password must be at least 8 characters." },
         },
         authUserId: input.authUserId,
       };
@@ -185,9 +206,23 @@ async function signup(input) {
         status: 400,
         body: {
           message: "Enter a valid email address.",
+          fieldErrors: { email: "Enter a valid email address." },
         },
         authUserId: input.authUserId,
       };
+    }
+    if (normalizedEmail.endsWith("@gmail.com")) {
+      const gmailUsername = normalizedEmail.slice(0, -"@gmail.com".length);
+      if (gmailUsername.length < 6 || gmailUsername.length > 30) {
+        return {
+          status: 400,
+          body: {
+            message: "For Gmail addresses, the username before @gmail.com must be 6–30 characters.",
+            fieldErrors: { email: "Gmail usernames must be 6–30 characters before @gmail.com." },
+          },
+          authUserId: input.authUserId,
+        };
+      }
     }
     const existingUser = await User.findOne({
       email: normalizedEmail,
@@ -197,6 +232,7 @@ async function signup(input) {
         status: 409,
         body: {
           message: "An account with that email already exists. Please sign in.",
+          fieldErrors: { email: "This email is already registered. Please sign in." },
         },
         authUserId: input.authUserId,
       };
@@ -225,7 +261,7 @@ async function signup(input) {
         email: normalizedEmail,
       },
       {
-        fullName: fullName.trim(),
+        fullName: normalizedFullName,
         email: normalizedEmail,
         referralCode:
           typeof referralCode === "string" ? referralCode.trim() : "",
@@ -266,6 +302,7 @@ async function signup(input) {
         body: {
           message:
             "An account or pending signup with that email already exists.",
+          fieldErrors: { email: "This email is already registered or has a pending signup." },
         },
         authUserId: input.authUserId,
       };
