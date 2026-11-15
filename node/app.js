@@ -9,13 +9,25 @@ import storeRoutes from "./routes/storeRoutes.js";
 
 const app = express();
 app.set("trust proxy", 1);
-const clientOrigin = process.env.CLIENT_URL || "http://localhost:5173";
+const configuredClientUrl = (process.env.CLIENT_URL || "http://localhost:5173").trim().replace(/\/+$/, "");
 
 app.use(
   cors({
-    origin: clientOrigin,
+    origin: (origin, callback) => {
+      if (!origin) return callback(null, true);
+      const normalized = origin.trim().replace(/\/+$/, "");
+      if (
+        normalized === configuredClientUrl ||
+        normalized === "http://localhost:5173" ||
+        normalized === "http://localhost:3000" ||
+        normalized.endsWith(".vercel.app")
+      ) {
+        return callback(null, true);
+      }
+      return callback(null, configuredClientUrl);
+    },
     credentials: true,
-    allowedHeaders: ["Content-Type"],
+    allowedHeaders: ["Content-Type", "Authorization"],
   }),
 );
 
