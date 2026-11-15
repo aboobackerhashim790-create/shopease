@@ -1,0 +1,122 @@
+.settings-page {
+  display: grid;
+  gap: 22px;
+  color: #20312b;
+}
+
+.settings-security-banner {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 18px 20px;
+  border: 1px solid #dceade;
+  border-radius: 16px;
+  background: linear-gradient(110deg, #f0f7f1, #e8f2eb);
+}
+
+.settings-security-banner > span {
+  display: grid;
+  width: 42px;
+  height: 42px;
+  flex: 0 0 42px;
+  place-items: center;
+  border-radius: 13px;
+  background: white;
+  color: #123f32;
+  font-size: 1.4rem;
+}
+
+.settings-security-banner strong {
+  color: #123f32;
+  font-size: 0.92rem;
+}
+
+.settings-security-banner p {
+  margin: 5px 0 0;
+  color: #6c7971;
+  font-size: 0.82rem;
+}
+
+.settings-password-panel {
+  display: grid;
+  gap: 16px;
+}
+
+.settings-password-panel .account-panel-heading {
+  margin-bottom: 0;
+}
+
+.settings-password-form {
+  display: grid;
+  gap: 15px;
+  max-width: 520px;
+}
+
+.settings-password-form label {
+  display: grid;
+  gap: 7px;
+  color: #4c5b53;
+  font-size: 0.8rem;
+  font-weight: 700;
+}
+
+.settings-password-form input {
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid #e3e9e4;
+  border-radius: 10px;
+  outline: none;
+  background: #f8faf8;
+  color: #263a32;
+  font-size: 0.9rem;
+}
+
+.settings-password-input-wrap {
+  position: relative;
+  width: 100%;
+}
+
+.settings-password-input-wrap input {
+  box-sizing: border-box;
+  padding-right: 48px;
+}
+
+.settings-password-input-wrap button {
+  position: absolute;
+  top: 50%;
+  right: 9px;
+  display: grid;
+  width: 30px;
+  height: 30px;
+  padding: 6px;
+  transform: translateY(-50%);
+  border: 0;
+  border-radius: 50%;
+  background: transparent;
+  color: #52635d;
+  cursor: pointer;
+  justify-self: auto;
+  margin: 0;
+}
+
+.settings-password-form input:focus {
+  border-color: #56836c;
+  box-shadow: 0 0 0 3px #56836c1c;
+}
+
+.settings-password-form button {
+  justify-self: start;
+  margin-top: 3px;
+}
+
+.settings-forgot-link {
+  margin: 0;
+  color: #77827c;
+  font-size: 0.84rem;
+}
+
+.settings-forgot-link a {
+  color: #21644a;
+  font-weight: 700;
+}
