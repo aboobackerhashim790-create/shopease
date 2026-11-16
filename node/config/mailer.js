@@ -9,6 +9,9 @@ const transporter = nodemailer.createTransport({
     user: emailUser,
     pass: emailAppPassword,
   },
+  connectionTimeout: 10000,
+  greetingTimeout: 10000,
+  socketTimeout: 15000,
 });
 
 export function getMailSender() {

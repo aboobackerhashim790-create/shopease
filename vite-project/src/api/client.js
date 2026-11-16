@@ -3,7 +3,11 @@ import axios from "axios";
 axios.defaults.withCredentials = true;
 
 const API = axios.create({
-  baseURL: import.meta.env.VITE_API_URL || "http://localhost:3000/api",
+  baseURL:
+    import.meta.env.VITE_API_URL ||
+    (import.meta.env.PROD
+      ? "https://shopease-backend-hashim.onrender.com/api"
+      : "http://localhost:3000/api"),
   validateStatus: (status) => status < 500,
 });
 

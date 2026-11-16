@@ -9,7 +9,9 @@ let activeGoogleCallback = null;
 function GoogleSignInButton({ buttonText = "continue_with" }) {
   const buttonContainer = useRef(null);
   const navigate = useNavigate();
-  const clientId = import.meta.env.VITE_GOOGLE_CLIENT_ID;
+  const clientId =
+    import.meta.env.VITE_GOOGLE_CLIENT_ID ||
+    "124181113746-0e0l591gp3ntcmhqotdhdb8t4j47jsac.apps.googleusercontent.com";
   const [message, setMessage] = useState(() =>
     clientId ? "" : "Google Client ID is missing from the Vite .env file.",
   );
