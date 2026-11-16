@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 import PendingSignup from "../models/PendingSignup.js";
 import PasswordResetChallenge from "../models/PasswordResetChallenge.js";
-import transporter from "../config/mailer.js";
+import transporter, { getMailSender } from "../config/mailer.js";
 import googleClient from "../config/google.js";
 import { hashVerificationCode } from "../utils/verificationCode.js";
 
@@ -84,7 +84,7 @@ async function resendVerification(input) {
     const code = String(randomInt(100000, 1000000));
     // Only replace the stored code and consume a resend after the email is accepted.
     await transporter.sendMail({
-      from: "\"ShopEase\" <${process.env.EMAIL_USER}>",
+      from: getMailSender(),
       to: email,
       subject: "Your new ShopEase verification code",
       text: `Your new verification code is ${code}. It expires in 10 minutes.`,
@@ -274,7 +274,7 @@ async function signup(input) {
       },
     );
     await transporter.sendMail({
-      from: "\"ShopEase\" <${process.env.EMAIL_USER}>",
+      from: getMailSender(),
       to: normalizedEmail,
       subject: "Your ShopEase verification code",
       text: `Your verification code is ${code}. It expires in 10 minutes.`,
@@ -672,7 +672,7 @@ async function requestPasswordReset(input) {
     const code = String(randomInt(100000, 1000000));
     // Send first so a mail failure does not replace a working code or use a resend.
     await transporter.sendMail({
-      from: "\"ShopEase\" <${process.env.EMAIL_USER}>",
+      from: getMailSender(),
       to: email,
       subject: "Your ShopEase password reset code",
       text: `Your password reset code is ${code}. It expires in 10 minutes.`,
