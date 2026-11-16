@@ -3,6 +3,7 @@ import validator from "validator";
 import bcrypt from "bcryptjs";
 
 import User from "../models/User.js";
+import Wallet from "../models/Wallet.js";
 import PendingSignup from "../models/PendingSignup.js";
 import PasswordResetChallenge from "../models/PasswordResetChallenge.js";
 import transporter, { getMailSender, getTransporter, sendEmailMessage } from "../config/mailer.js";
@@ -233,6 +234,22 @@ async function signup(input) {
         authUserId: input.authUserId,
       };
     }
+    const trimmedReferralCode = typeof referralCode === "string" ? referralCode.trim() : "";
+    if (trimmedReferralCode) {
+      const referrerExists = await User.exists({
+        personalReferralCode: trimmedReferralCode,
+      });
+      if (!referrerExists) {
+        return {
+          status: 400,
+          body: {
+            message: "The referral code entered does not exist.",
+            fieldErrors: { referralCode: "Invalid referral code. Please check or leave empty." },
+          },
+          authUserId: input.authUserId,
+        };
+      }
+    }
     const existingPendingSignup = await PendingSignup.findOne({
       email: normalizedEmail,
       expiresAt: {
@@ -376,7 +393,7 @@ async function verifyEmail(input) {
     }
 
     // The permanent User document is created only after OTP verification.
-    await User.create({
+    const newUser = await User.create({
       fullName: pendingSignup.fullName,
       email: pendingSignup.email,
       referralCode: pendingSignup.referralCode,
@@ -384,6 +401,51 @@ async function verifyEmail(input) {
       passwordHash: pendingSignup.passwordHash,
       isVerified: true,
     });
+
+    let initialBalance = 0;
+    const initialTransactions = [];
+
+    if (pendingSignup.referralCode) {
+      const referrer = await User.findOne({
+        personalReferralCode: pendingSignup.referralCode,
+      });
+
+      if (referrer && String(referrer._id) !== String(newUser._id)) {
+        // 1. Credit ₹5 to the new user who used the referral code
+        initialBalance = 5;
+        initialTransactions.push({
+          type: "Credit",
+          amount: 5,
+          description: `Referral signup reward (Referred by ${referrer.fullName || "friend"})`,
+          createdAt: new Date(),
+        });
+
+        // 2. Also reward the referrer with ₹5 in their wallet
+        await Wallet.findOneAndUpdate(
+          { userId: referrer._id },
+          {
+            $inc: { balance: 5 },
+            $push: {
+              transactions: {
+                type: "Credit",
+                amount: 5,
+                description: `Referral bonus (Referred ${newUser.fullName || "new user"})`,
+                createdAt: new Date(),
+              },
+            },
+          },
+          { upsert: true, new: true },
+        );
+      }
+    }
+
+    // Initialize the new user's wallet
+    await Wallet.create({
+      userId: newUser._id,
+      balance: initialBalance,
+      transactions: initialTransactions,
+    });
+
     await PendingSignup.deleteOne({
       _id: pendingSignup._id,
     });
@@ -584,6 +646,11 @@ async function googleLogin(input) {
         isVerified: true,
         personalReferralCode: await createUniquePersonalReferralCode(),
       });
+      await Wallet.findOneAndUpdate(
+        { userId: user._id },
+        { $setOnInsert: { balance: 0, transactions: [] } },
+        { upsert: true },
+      );
     }
     if (user.role === "customer" && user.isBlocked) {
       return {

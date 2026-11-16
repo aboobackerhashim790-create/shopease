@@ -178,7 +178,12 @@ function Signup() {
             value={form.referralCode}
             onChange={handleChange}
             placeholder="Eg: 808943"
+            aria-invalid={Boolean(fieldErrors.referralCode)}
+            className={fieldErrors.referralCode ? "field-invalid" : ""}
           />
+          {fieldErrors.referralCode && (
+            <span className="signup-field-feedback is-error">{fieldErrors.referralCode}</span>
+          )}
 
           <div className="signup-label-row password-label">
             <label htmlFor="signupPassword">Create Password</label>
