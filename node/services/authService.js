@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 import PendingSignup from "../models/PendingSignup.js";
 import PasswordResetChallenge from "../models/PasswordResetChallenge.js";
-import transporter, { getMailSender } from "../config/mailer.js";
+import transporter, { getMailSender, getTransporter } from "../config/mailer.js";
 import googleClient from "../config/google.js";
 import { hashVerificationCode } from "../utils/verificationCode.js";
 
@@ -273,12 +273,26 @@ async function signup(input) {
         runValidators: true,
       },
     );
-    await transporter.sendMail({
-      from: getMailSender(),
-      to: normalizedEmail,
-      subject: "Your ShopEase verification code",
-      text: `Your verification code is ${code}. It expires in 10 minutes.`,
-    });
+    try {
+      await getTransporter().sendMail({
+        from: getMailSender(),
+        to: normalizedEmail,
+        subject: "Your ShopEase verification code",
+        text: `Your verification code is ${code}. It expires in 10 minutes.`,
+      });
+    } catch (mailError) {
+      if (normalizedEmail) {
+        await PendingSignup.deleteOne({ email: normalizedEmail });
+      }
+      console.error("Nodemailer sendMail failed:", mailError);
+      return {
+        status: 500,
+        body: {
+          message: `Email sending failed: ${mailError.message}`,
+        },
+        authUserId: input.authUserId,
+      };
+    }
     return {
       status: 201,
       body: {
@@ -307,7 +321,7 @@ async function signup(input) {
     return {
       status: 500,
       body: {
-        message: "Could not start signup or send the verification email.",
+        message: error.message || "Could not start signup or send the verification email.",
       },
       authUserId: input.authUserId,
     };
