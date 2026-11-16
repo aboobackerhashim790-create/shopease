@@ -4,7 +4,7 @@ import User from "../models/User.js";
 import Address from "../models/Address.js";
 import Wallet from "../models/Wallet.js";
 import EmailChangeChallenge from "../models/EmailChangeChallenge.js";
-import transporter, { getMailSender } from "../config/mailer.js";
+import transporter, { getMailSender, sendEmailMessage } from "../config/mailer.js";
 import { randomInt, timingSafeEqual } from "crypto";
 import { hashVerificationCode } from "../utils/verificationCode.js";
 import {
@@ -240,8 +240,8 @@ async function requestEmailChange(input) {
         runValidators: true,
       },
     );
-    await transporter.sendMail({
-      from: getMailSender(),
+    console.log(`[PROFILE] Email change verification code for ${newEmail}: ${code}`);
+    await sendEmailMessage({
       to: newEmail,
       subject: "Verify your new ShopEase email",
       text: `Your email-change verification code is ${code}. It expires in 10 minutes.`,

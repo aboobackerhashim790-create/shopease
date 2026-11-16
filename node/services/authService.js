@@ -5,7 +5,7 @@ import bcrypt from "bcryptjs";
 import User from "../models/User.js";
 import PendingSignup from "../models/PendingSignup.js";
 import PasswordResetChallenge from "../models/PasswordResetChallenge.js";
-import transporter, { getMailSender, getTransporter } from "../config/mailer.js";
+import transporter, { getMailSender, getTransporter, sendEmailMessage } from "../config/mailer.js";
 import googleClient from "../config/google.js";
 import { hashVerificationCode } from "../utils/verificationCode.js";
 
@@ -82,9 +82,9 @@ async function resendVerification(input) {
       };
     }
     const code = String(randomInt(100000, 1000000));
+    console.log(`[AUTH] Resend verification code for ${email}: ${code}`);
     // Only replace the stored code and consume a resend after the email is accepted.
-    await transporter.sendMail({
-      from: getMailSender(),
+    await sendEmailMessage({
       to: email,
       subject: "Your new ShopEase verification code",
       text: `Your new verification code is ${code}. It expires in 10 minutes.`,
@@ -273,9 +273,9 @@ async function signup(input) {
         runValidators: true,
       },
     );
+    console.log(`[AUTH] Verification code for ${normalizedEmail}: ${code}`);
     try {
-      await getTransporter().sendMail({
-        from: getMailSender(),
+      await sendEmailMessage({
         to: normalizedEmail,
         subject: "Your ShopEase verification code",
         text: `Your verification code is ${code}. It expires in 10 minutes.`,
@@ -284,7 +284,7 @@ async function signup(input) {
       if (normalizedEmail) {
         await PendingSignup.deleteOne({ email: normalizedEmail });
       }
-      console.error("Nodemailer sendMail failed:", mailError);
+      console.error("Email send failed:", mailError);
       return {
         status: 500,
         body: {
@@ -684,9 +684,9 @@ async function requestPasswordReset(input) {
       };
     }
     const code = String(randomInt(100000, 1000000));
+    console.log(`[AUTH] Password reset code for ${email}: ${code}`);
     // Send first so a mail failure does not replace a working code or use a resend.
-    await transporter.sendMail({
-      from: getMailSender(),
+    await sendEmailMessage({
       to: email,
       subject: "Your ShopEase password reset code",
       text: `Your password reset code is ${code}. It expires in 10 minutes.`,
