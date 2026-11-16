@@ -241,7 +241,7 @@ async function requestEmailChange(input) {
       },
     );
     await transporter.sendMail({
-      from: process.env.EMAIL_USER,
+      from: "\"ShopEase\" <${process.env.EMAIL_USER}>",
       to: newEmail,
       subject: "Verify your new ShopEase email",
       text: `Your email-change verification code is ${code}. It expires in 10 minutes.`,
