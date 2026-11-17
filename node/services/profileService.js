@@ -4,7 +4,7 @@ import User from "../models/User.js";
 import Address from "../models/Address.js";
 import Wallet from "../models/Wallet.js";
 import EmailChangeChallenge from "../models/EmailChangeChallenge.js";
-import transporter, { getMailSender, sendEmailMessage } from "../config/mailer.js";
+import { sendEmailMessage } from "../config/mailer.js";
 import { randomInt, timingSafeEqual } from "crypto";
 import { hashVerificationCode } from "../utils/verificationCode.js";
 import {

@@ -32,6 +32,12 @@ function invalid(status, message) {
   return { status, body: { message } };
 }
 
+export function isWithinReturnWindow(deliveredAt, now = Date.now()) {
+  if (!deliveredAt) return false;
+  const deliveryTime = new Date(deliveredAt).getTime();
+  return Number.isFinite(deliveryTime) && now <= deliveryTime + RETURN_WINDOW_MS;
+}
+
 function isTransactionsUnavailable(error) {
   return [20, 263, 303].includes(error?.code) ||
     /transaction numbers are only allowed|does not support retryable writes/i.test(error?.message || "");
@@ -257,7 +263,7 @@ export async function requestMyOrderReturn(input) {
       return invalid(409, "You can request a return only after this product is delivered.");
     }
     const deliveredAt = item.deliveredAt || order.deliveredAt || order.updatedAt;
-    if (!deliveredAt || Date.now() > new Date(deliveredAt).getTime() + RETURN_WINDOW_MS) {
+    if (!isWithinReturnWindow(deliveredAt)) {
       return invalid(409, "The 7-day return window has expired.");
     }
     if (!order.deliveredAt && order.items.every((orderItem) => (orderItem.fulfillmentStatus || order.orderStatus) === "Delivered")) {

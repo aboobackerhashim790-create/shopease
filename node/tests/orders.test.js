@@ -1,5 +1,7 @@
 import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { isValidOrderStatusTransition, summarizeFulfillment } from "../services/adminOrderService.js";
+import { isWithinReturnWindow } from "../services/customerOrderService.js";
 
 describe("Order State Machine & Fulfillment Test Suite", () => {
   const transitions = {
@@ -80,6 +82,41 @@ describe("Order State Machine & Fulfillment Test Suite", () => {
   });
 });
 
+describe("Order rules used by the application", () => {
+  it("allows each supported forward transition through the actual order service rule", () => {
+    assert.equal(isValidOrderStatusTransition("Pending", "Confirmed"), true);
+    assert.equal(isValidOrderStatusTransition("Confirmed", "Shipped"), true);
+    assert.equal(isValidOrderStatusTransition("Shipped", "Out for Delivery"), true);
+    assert.equal(isValidOrderStatusTransition("Out for Delivery", "Delivered"), true);
+  });
+
+  it("blocks backward, skipped, and terminal status transitions", () => {
+    assert.equal(isValidOrderStatusTransition("Shipped", "Confirmed"), false);
+    assert.equal(isValidOrderStatusTransition("Pending", "Delivered"), false);
+    assert.equal(isValidOrderStatusTransition("Delivered", "Cancelled"), false);
+    assert.equal(isValidOrderStatusTransition("Unknown", "Pending"), false);
+  });
+
+  it("summarizes mixed item statuses using the slowest active item", () => {
+    assert.equal(summarizeFulfillment({ orderStatus: "Shipped", items: [
+      { fulfillmentStatus: "Shipped" }, { fulfillmentStatus: "Confirmed" },
+    ] }), "Confirmed");
+  });
+
+  it("ignores cancelled items when summarizing the active items", () => {
+    assert.equal(summarizeFulfillment({ orderStatus: "Pending", items: [
+      { isCancelled: true, fulfillmentStatus: "Cancelled" },
+      { isCancelled: false, fulfillmentStatus: "Delivered" },
+    ] }), "Delivered");
+  });
+
+  it("returns Cancelled when no active items remain", () => {
+    assert.equal(summarizeFulfillment({ orderStatus: "Pending", items: [
+      { isCancelled: true, fulfillmentStatus: "Cancelled" },
+    ] }), "Cancelled");
+  });
+});
+
 describe("Return Window Eligibility Test Suite", () => {
   const RETURN_WINDOW_DAYS = 7;
   const RETURN_WINDOW_MS = RETURN_WINDOW_DAYS * 24 * 60 * 60 * 1000;
@@ -94,5 +131,22 @@ describe("Return Window Eligibility Test Suite", () => {
     const deliveredAt = new Date(Date.now() - 8 * 24 * 60 * 60 * 1000); // 8 days ago
     const isEligible = Date.now() <= new Date(deliveredAt).getTime() + RETURN_WINDOW_MS;
     assert.equal(isEligible, false, "Returns after 7 days must be expired");
+  });
+
+  it("allows a return at the exact seven-day deadline", () => {
+    const deliveredAt = new Date("2026-11-01T12:00:00.000Z");
+    const deadline = deliveredAt.getTime() + RETURN_WINDOW_MS;
+    assert.equal(isWithinReturnWindow(deliveredAt, deadline), true);
+  });
+
+  it("rejects missing or invalid delivery timestamps", () => {
+    assert.equal(isWithinReturnWindow(null), false);
+    assert.equal(isWithinReturnWindow("not a date"), false);
+  });
+
+  it("rejects a return one millisecond after the seven-day deadline", () => {
+    const deliveredAt = new Date("2026-11-01T12:00:00.000Z");
+    const deadline = deliveredAt.getTime() + RETURN_WINDOW_MS;
+    assert.equal(isWithinReturnWindow(deliveredAt, deadline + 1), false);
   });
 });

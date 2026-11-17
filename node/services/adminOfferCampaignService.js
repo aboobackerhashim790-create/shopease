@@ -8,7 +8,7 @@ const response = (status, message, extra = {}) => ({
   body: { message, ...extra },
 });
 
-function validateCampaign(body = {}) {
+export function validateCampaign(body = {}) {
   const name = String(body.name || "").trim();
   const description = String(body.description || "").trim();
   const discountType = body.discountType;

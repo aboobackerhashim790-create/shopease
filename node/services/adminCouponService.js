@@ -3,7 +3,7 @@ import Coupon from "../models/Coupon.js";
 
 const result = (status, message, extra = {}) => ({ status, body: { message, ...extra } });
 
-function validateCoupon(body) {
+export function validateCoupon(body = {}) {
   const code = String(body.code || "").trim().toUpperCase();
   const discountType = body.discountType;
   const discountValue = Number(body.discountValue);

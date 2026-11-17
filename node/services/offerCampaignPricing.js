@@ -25,6 +25,12 @@ function findBestCampaign(product, price, campaigns) {
 
   let best = null;
   for (const campaign of campaigns) {
+    const discountValue = Number(campaign.discountValue);
+    if (
+      !Number.isFinite(discountValue) ||
+      discountValue <= 0 ||
+      !["percentage", "fixed"].includes(campaign.discountType)
+    ) continue;
     if (!campaignMatchesProduct(campaign, product)) continue;
     const salePrice = calculateCampaignPrice(Number(price), campaign);
     if (!best || salePrice < best.salePrice) {

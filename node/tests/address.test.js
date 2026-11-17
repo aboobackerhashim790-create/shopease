@@ -56,4 +56,43 @@ describe("Address & Profile Validation Test Suite", () => {
       assert.equal(result.success, false, `Address without '${field}' must be rejected`);
     }
   });
+
+  it("trims surrounding whitespace from address fields", () => {
+    const parsed = addressSchema.parse({
+      ...validAddressData,
+      fullName: "  Hashim Aboobacker  ",
+      city: " Kochi ",
+      addressLine2: "  Near Metro  ",
+    });
+    assert.equal(parsed.fullName, "Hashim Aboobacker");
+    assert.equal(parsed.city, "Kochi");
+    assert.equal(parsed.addressLine2, "Near Metro");
+  });
+
+  it("defaults an omitted optional address line to an empty string", () => {
+    const data = { ...validAddressData };
+    delete data.addressLine2;
+    assert.equal(addressSchema.parse(data).addressLine2, "");
+  });
+
+  it("uses Home when the optional label is blank", () => {
+    assert.equal(addressSchema.parse({ ...validAddressData, label: "  " }).label, "Home");
+  });
+
+  it("accepts a provided address label and default flag", () => {
+    const parsed = addressSchema.parse({ ...validAddressData, label: "Office", isDefault: true });
+    assert.equal(parsed.label, "Office");
+    assert.equal(parsed.isDefault, true);
+  });
+
+  it("rejects names and address lines that exceed their maximum lengths", () => {
+    assert.equal(addressSchema.safeParse({ ...validAddressData, fullName: "a".repeat(101) }).success, false);
+    assert.equal(addressSchema.safeParse({ ...validAddressData, addressLine1: "a".repeat(161) }).success, false);
+    assert.equal(addressSchema.safeParse({ ...validAddressData, addressLine2: "a".repeat(161) }).success, false);
+  });
+
+  it("rejects an unsupported address label or non-boolean default flag", () => {
+    assert.equal(addressSchema.safeParse({ ...validAddressData, label: "a".repeat(31) }).success, false);
+    assert.equal(addressSchema.safeParse({ ...validAddressData, isDefault: "yes" }).success, false);
+  });
 });

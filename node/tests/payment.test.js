@@ -2,6 +2,7 @@ import { describe, it } from "node:test";
 import assert from "node:assert/strict";
 import { createHmac, timingSafeEqual } from "node:crypto";
 import { calculateCouponDiscount } from "../services/couponPricing.js";
+import { validateCoupon } from "../services/adminCouponService.js";
 
 // Helper to simulate Razorpay HMAC verification as implemented in orderService.js
 function verifySignature(razorpayOrderId, razorpayPaymentId, razorpaySignature, secret) {
@@ -121,6 +122,68 @@ describe("Payment Test Suite: Coupons & Discount Math", () => {
     assert.equal(discountAmount, 149.85);
     assert.equal(totalAmount, 849.15);
     assert.equal(totalAmount.toString(), "849.15", "Should not have precision drift like 849.1499999999999");
+  });
+
+  it("applies a 100 percent coupon without making the total negative", () => {
+    assert.equal(calculateCouponDiscount({ discountType: "percentage", discountValue: 100 }, 250), 250);
+  });
+
+  it("returns zero discount for a zero subtotal", () => {
+    assert.equal(calculateCouponDiscount({ discountType: "fixed", discountValue: 500 }, 0), 0);
+  });
+
+  it("normalizes coupon codes to uppercase and trims whitespace", () => {
+    const parsed = validateCoupon({
+      code: "  welcome_10 ", discountType: "percentage", discountValue: "10",
+    });
+    assert.equal(parsed.value.code, "WELCOME_10");
+    assert.equal(parsed.value.discountValue, 10);
+  });
+
+  it("accepts an optional unlimited use limit and no expiry", () => {
+    const parsed = validateCoupon({ code: "SAVE10", discountType: "fixed", discountValue: 10 });
+    assert.equal(parsed.value.usageLimit, null);
+    assert.equal(parsed.value.expiresAt, null);
+    assert.equal(parsed.value.firstOrderOnly, false);
+  });
+
+  it("rejects coupon codes with unsupported characters", () => {
+    const parsed = validateCoupon({ code: "SAVE 10!", discountType: "fixed", discountValue: 10 });
+    assert.ok(parsed.errors.code);
+  });
+
+  it("rejects percentage discounts above 100", () => {
+    const parsed = validateCoupon({ code: "SAVE10", discountType: "percentage", discountValue: 101 });
+    assert.ok(parsed.errors.discountValue);
+  });
+
+  it("rejects a zero or negative discount", () => {
+    for (const discountValue of [0, -1]) {
+      assert.ok(validateCoupon({ code: "SAVE10", discountType: "fixed", discountValue }).errors.discountValue);
+    }
+  });
+
+  it("rejects a negative minimum subtotal", () => {
+    const parsed = validateCoupon({ code: "SAVE10", discountType: "fixed", discountValue: 10, minimumSubtotal: -1 });
+    assert.ok(parsed.errors.minimumSubtotal);
+  });
+
+  it("rejects non-positive usage limits that are provided", () => {
+    for (const usageLimit of [0, -1, 1.5]) {
+      assert.ok(validateCoupon({ code: "SAVE10", discountType: "fixed", discountValue: 10, usageLimit }).errors.usageLimit);
+    }
+  });
+
+  it("rejects invalid coupon dates and expiry before start", () => {
+    const invalidDate = validateCoupon({
+      code: "SAVE10", discountType: "fixed", discountValue: 10, startsAt: "bad-date",
+    });
+    assert.ok(invalidDate.errors.startsAt);
+    const reversed = validateCoupon({
+      code: "SAVE10", discountType: "fixed", discountValue: 10,
+      startsAt: "2030-12-02", expiresAt: "2030-12-01",
+    });
+    assert.ok(reversed.errors.expiresAt);
   });
 });
 

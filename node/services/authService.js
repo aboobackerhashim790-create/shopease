@@ -6,7 +6,7 @@ import User from "../models/User.js";
 import Wallet from "../models/Wallet.js";
 import PendingSignup from "../models/PendingSignup.js";
 import PasswordResetChallenge from "../models/PasswordResetChallenge.js";
-import transporter, { getMailSender, getTransporter, sendEmailMessage } from "../config/mailer.js";
+import { sendEmailMessage } from "../config/mailer.js";
 import googleClient from "../config/google.js";
 import { hashVerificationCode } from "../utils/verificationCode.js";
 

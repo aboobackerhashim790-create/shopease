@@ -22,7 +22,7 @@ const fulfillmentRanks = {
   Returned: 4,
 };
 
-function summarizeFulfillment(order) {
+export function summarizeFulfillment(order) {
   // A failed/cancelled payment attempt does not cancel an order. It has not
   // reserved stock or entered fulfillment, so keep it available for retry.
   if (
@@ -41,6 +41,10 @@ function summarizeFulfillment(order) {
   return activeStatuses.reduce((leastAdvanced, itemStatus) =>
     fulfillmentRanks[itemStatus] < fulfillmentRanks[leastAdvanced] ? itemStatus : leastAdvanced,
   activeStatuses[0]);
+}
+
+export function isValidOrderStatusTransition(currentStatus, nextStatus) {
+  return Boolean(transitions[currentStatus]?.includes(nextStatus));
 }
 
 const bad = (status, message) => ({ status, body: { message } });
@@ -133,7 +137,7 @@ export async function updateOrderStatus(input) {
       // Treat them as pending so an admin can manage the unpaid order correctly.
       const effectiveStatus = summarizeFulfillment(order);
       if (order.orderStatus !== effectiveStatus) order.orderStatus = effectiveStatus;
-      if (!transitions[effectiveStatus]?.includes(nextStatus)) {
+      if (!isValidOrderStatusTransition(effectiveStatus, nextStatus)) {
         const error = new Error(`Cannot move an order from ${effectiveStatus} to ${nextStatus}.`);
         error.status = 409;
         throw error;
@@ -252,7 +256,7 @@ export async function updateOrderItemStatus(input) {
       }
 
       const currentStatus = item.fulfillmentStatus || order.orderStatus;
-      if (!transitions[currentStatus]?.includes(nextStatus) || nextStatus === "Cancelled") {
+      if (!isValidOrderStatusTransition(currentStatus, nextStatus) || nextStatus === "Cancelled") {
         const error = new Error(`Cannot move this product from ${currentStatus} to ${nextStatus}.`);
         error.status = 409;
         throw error;
