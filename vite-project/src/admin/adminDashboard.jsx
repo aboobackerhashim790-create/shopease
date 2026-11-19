@@ -25,6 +25,7 @@ export default function AdminDashboard() {
       <div className="admin-dashboard-cards">
         <article><small>Total orders</small><strong>{summary?.totalOrders ?? 0}</strong><span>All order records</span></article>
         <article><small>Customers</small><strong>{summary?.customers ?? 0}</strong><span>Registered customer accounts</span></article>
+        <article><small>Blocked Customers</small><strong>{summary?.blockedUsers ?? 0}</strong><span>Blocked customer accounts</span></article>
         <article><small>Listed products</small><strong>{summary?.listedProducts ?? 0}</strong><span>Active products</span></article>
         <article><small>Paid revenue</small><strong>{money(summary?.paidRevenue)}</strong><span>Paid orders less accepted returns and cancelled orders</span></article>
       </div>

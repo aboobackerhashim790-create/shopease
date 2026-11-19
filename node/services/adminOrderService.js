@@ -446,9 +446,10 @@ export async function reviewReturn(input) {
 
 export async function getDashboardSummary() {
   try {
-    const [orders, customers, products, revenue, recentOrders] = await Promise.all([
+    const [orders, customers, blockedUsers, products, revenue, recentOrders] = await Promise.all([
       Order.countDocuments(),
       User.countDocuments({ role: "customer" }),
+      User.countDocuments({ role: "customer", isBlocked: true }),
       Product.countDocuments({ active: true }),
       Order.aggregate([
         { $match: { paymentStatus: "Paid", orderStatus: { $ne: "Cancelled" } } },
@@ -512,7 +513,7 @@ export async function getDashboardSummary() {
       Order.find().sort({ createdAt: -1 }).limit(6).populate("userId", "fullName email").lean(),
     ]);
     const orderStatus = await Order.aggregate([{ $group: { _id: "$orderStatus", count: { $sum: 1 } } }]);
-    return { status: 200, body: { summary: { totalOrders: orders, customers, listedProducts: products, paidRevenue: revenue[0]?.total || 0, orderStatus }, recentOrders } };
+    return { status: 200, body: { summary: { totalOrders: orders, customers, blockedUsers, listedProducts: products, paidRevenue: revenue[0]?.total || 0, orderStatus }, recentOrders } };
   } catch (error) {
     console.error("Admin dashboard error:", error);
     return bad(500, "Could not load dashboard.");
