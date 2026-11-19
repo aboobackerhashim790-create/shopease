@@ -187,12 +187,25 @@ async function signup(input) {
         authUserId: input.authUserId,
       };
     }
-    if (password.length < 8) {
+    const hasLetter = /[a-zA-Z]/.test(password);
+    const hasNumber = /\d/.test(password);
+    const hasSpecial = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~]/.test(password);
+
+    if (password.length < 8 || !hasLetter || !hasNumber || !hasSpecial) {
+      const message =
+        password.length < 8
+          ? "Password must be at least 8 characters."
+          : !hasLetter
+            ? "Password must contain at least one letter."
+            : !hasNumber
+              ? "Password must contain at least one number."
+              : "Password must contain at least one punctuation or special character.";
+
       return {
         status: 400,
         body: {
-          message: "Password must be at least 8 characters.",
-          fieldErrors: { password: "Password must be at least 8 characters." },
+          message,
+          fieldErrors: { password: message },
         },
         authUserId: input.authUserId,
       };
@@ -811,12 +824,23 @@ async function resetPassword(input) {
     const code = String(input.body?.code || "");
     const newPassword =
       typeof input.body?.newPassword === "string" ? input.body.newPassword : "";
-    if (!email || !/^\d{6}$/.test(code) || newPassword.length < 8) {
+    const hasLetter = /[a-zA-Z]/.test(newPassword);
+    const hasNumber = /\d/.test(newPassword);
+    const hasSpecial = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~]/.test(newPassword);
+    if (!email || !/^\d{6}$/.test(code) || newPassword.length < 8 || !hasLetter || !hasNumber || !hasSpecial) {
       return {
         status: 400,
         body: {
           message:
-            "Enter your email, the 6-digit code, and a password with at least 8 characters.",
+            !email || !/^\d{6}$/.test(code)
+              ? "Enter your email and the 6-digit code."
+              : newPassword.length < 8
+                ? "Password must be at least 8 characters."
+                : !hasLetter
+                  ? "Password must contain at least one letter."
+                  : !hasNumber
+                    ? "Password must contain at least one number."
+                    : "Password must contain at least one punctuation or special character.",
         },
         authUserId: input.authUserId,
       };

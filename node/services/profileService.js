@@ -372,11 +372,21 @@ async function changeMyPassword(input) {
         authUserId: input.authUserId,
       };
     }
-    if (newPassword.length < 8) {
+    const hasLetter = /[a-zA-Z]/.test(newPassword);
+    const hasNumber = /\d/.test(newPassword);
+    const hasSpecial = /[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~]/.test(newPassword);
+    if (newPassword.length < 8 || !hasLetter || !hasNumber || !hasSpecial) {
       return {
         status: 400,
         body: {
-          message: "New password must be at least 8 characters.",
+          message:
+            newPassword.length < 8
+              ? "New password must be at least 8 characters."
+              : !hasLetter
+                ? "New password must contain at least one letter."
+                : !hasNumber
+                  ? "New password must contain at least one number."
+                  : "New password must contain at least one punctuation or special character.",
         },
         authUserId: input.authUserId,
       };
