@@ -67,7 +67,7 @@ function Login() {
               onChange={(event) => setEmail(event.target.value)}
               placeholder="name@example.com"
               autoComplete="email"
-              required
+              
             />
 
             <div className="password-heading">
@@ -82,7 +82,6 @@ function Login() {
                 onChange={(event) => setPassword(event.target.value)}
                 placeholder="Enter your password"
                 autoComplete="current-password"
-                required
               />
               <button
                 className="password-visibility-button"

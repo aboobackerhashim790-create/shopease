@@ -68,6 +68,16 @@ function ForgotPassword() {
       setBusy(false);
       return;
     }
+    if (
+      newPassword.length < 8 ||
+      !/[a-zA-Z]/.test(newPassword) ||
+      !/\d/.test(newPassword) ||
+      !/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~]/.test(newPassword)
+    ) {
+      setError("Password must be at least 8 characters and include at least one letter, one number, and one punctuation/symbol.");
+      setBusy(false);
+      return;
+    }
     try {
       const response = await API.post("/auth/reset-password", {
         email,

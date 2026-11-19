@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 512 512" role="img" aria-label="ShopEase icon">
+  <circle cx="256" cy="256" r="244" fill="#073F32"/>
+  <!-- Minimal shopping-bag mark -->
+  <path d="M185 205h142l18 190H167l18-190Z" fill="none" stroke="#FFFFFF" stroke-width="24" stroke-linejoin="round"/>
+  <path d="M211 210v-30a45 45 0 0 1 90 0v30" fill="none" stroke="#FFFFFF" stroke-width="24" stroke-linecap="round"/>
+  <!-- Simple sparkle/leaf detail -->
+  <path d="M256 246c-8 20-17 29-37 37 20 8 29 17 37 37 8-20 17-29 37-37-20-8-29-17-37-37Z" fill="#FFFFFF"/>
+  <circle cx="256" cy="283" r="8" fill="#073F32"/>
+</svg>

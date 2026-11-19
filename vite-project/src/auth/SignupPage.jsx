@@ -27,6 +27,11 @@ function validateField(field, value, form) {
   if (field === "password") {
     if (!value) return "Password is required.";
     if (value.length < 8) return "Password must be at least 8 characters.";
+    if (!/[a-zA-Z]/.test(value)) return "Password must contain at least one letter.";
+    if (!/\d/.test(value)) return "Password must contain at least one number.";
+    if (!/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~]/.test(value)) {
+      return "Password must contain at least one punctuation or special character.";
+    }
   }
   if (field === "confirmPassword") {
     if (!value) return "Please confirm your password.";
@@ -86,7 +91,7 @@ function Signup() {
     setTouched({ fullName: true, email: true, password: true, confirmPassword: true, agreed: true });
     setFieldErrors(nextErrors);
 
-    if (nextErrors.confirmPassword || nextErrors.agreed) {
+    if (Object.values(nextErrors).some(Boolean)) {
       return;
     }
 
@@ -187,7 +192,7 @@ function Signup() {
 
           <div className="signup-label-row password-label">
             <label htmlFor="signupPassword">Create Password</label>
-            <span>Requires 8+ characters</span>
+            <span>8+ chars with letter, number & symbol</span>
           </div>
           <div className="signup-password-wrap">
             <input
@@ -196,7 +201,7 @@ function Signup() {
               type={showPassword ? "text" : "password"}
               value={form.password}
               onChange={handleChange}
-              placeholder="🔒  At least 8 characters"
+              placeholder="🔒  Min 8 chars, letter, number & symbol"
               aria-invalid={Boolean(fieldErrors.password)}
               className={touched.password ? (fieldErrors.password ? "field-invalid" : "field-valid") : ""}
             />
