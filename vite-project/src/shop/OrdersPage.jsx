@@ -242,6 +242,17 @@ function OrdersPage() {
               const canCancel = activeItems.length > 0 && activeItems.every((item) =>
                 ["Pending", "Confirmed"].includes(item.fulfillmentStatus || order.orderStatus),
               );
+              // If every non-cancelled item is Returned, show "Returned" on the badge
+              const allItemsReturned =
+                activeItems.length > 0 &&
+                activeItems.every((item) => item.fulfillmentStatus === "Returned");
+              const displayStatus = allItemsReturned ? "Returned" : order.orderStatus;
+              // Only show the return hint if at least one item can still be returned
+              const hasReturnableItem = activeItems.some(
+                (item) =>
+                  (item.fulfillmentStatus || order.orderStatus) === "Delivered" &&
+                  !["Requested", "Accepted", "Rejected"].includes(item.returnRequest?.status || "None"),
+              );
 
               return (
                 <article className="order-card" key={order._id}>
@@ -250,8 +261,8 @@ function OrdersPage() {
                       <span className="orders-eyebrow">ORDER NUMBER</span>
                       <h2>{order.orderNumber}</h2>
                     </div>
-                    <span className={`order-status order-status--${order.orderStatus.toLowerCase().replaceAll(" ", "-")}`}>
-                      {order.orderStatus}
+                    <span className={`order-status order-status--${displayStatus.toLowerCase().replaceAll(" ", "-")}`}>
+                      {displayStatus}
                     </span>
                   </div>
 
@@ -288,7 +299,7 @@ function OrdersPage() {
                         Cancellation closes after shipment.
                       </span>
                     )}
-                    {order.orderStatus === "Delivered" && (
+                    {order.orderStatus === "Delivered" && hasReturnableItem && (
                       <span className="order-action-hint">Open order details to request a return for an individual item.</span>
                     )}
                   </div>

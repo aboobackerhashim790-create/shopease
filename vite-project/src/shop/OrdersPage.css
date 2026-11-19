@@ -241,6 +241,11 @@
   color: #a83c31;
 }
 
+.order-status--returned {
+  background: #f0eeff;
+  color: #5b3bb5;
+}
+
 .order-status--pending {
   background: #fff5df;
   color: #896313;
