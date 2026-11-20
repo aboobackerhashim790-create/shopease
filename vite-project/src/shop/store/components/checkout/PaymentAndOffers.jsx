@@ -11,6 +11,7 @@ function PaymentAndOffers({
   onCouponCodeChange,
   onApplyCoupon,
   couponMessage,
+  couponIsError = false,
   availableCoupons,
 }) {
   return (
@@ -74,11 +75,30 @@ function PaymentAndOffers({
             id="checkout-coupon-code"
             value={couponCode}
             onChange={(event) => onCouponCodeChange(event.target.value)}
+            onKeyDown={(event) => {
+              if (event.key === "Enter") {
+                event.preventDefault();
+                onApplyCoupon(couponCode);
+              }
+            }}
             placeholder="Enter coupon code"
           />
-          <button className="store-button" type="button" onClick={onApplyCoupon}>Apply</button>
+          <button
+            className="store-button"
+            type="button"
+            onClick={() => onApplyCoupon(couponCode)}
+          >
+            Apply
+          </button>
         </div>
-        {couponMessage && <p className="checkout-coupon__message" role="status">{couponMessage}</p>}
+        {couponMessage && (
+          <p
+            className={`checkout-coupon__message ${couponIsError ? "checkout-coupon__message--error" : "checkout-coupon__message--success"}`}
+            role={couponIsError ? "alert" : "status"}
+          >
+            {couponMessage}
+          </p>
+        )}
       </div>
 
       <div className="checkout-available-coupons">
@@ -123,6 +143,7 @@ PaymentAndOffers.propTypes = {
   onCouponCodeChange: PropTypes.func.isRequired,
   onApplyCoupon: PropTypes.func.isRequired,
   couponMessage: PropTypes.string.isRequired,
+  couponIsError: PropTypes.bool,
   availableCoupons: PropTypes.arrayOf(PropTypes.object).isRequired,
 };
 

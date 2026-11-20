@@ -30,6 +30,7 @@ function CheckoutPage() {
   const [paymentMethod, setPaymentMethod] = useState("COD");
   const [couponCode, setCouponCode] = useState("");
   const [couponMessage, setCouponMessage] = useState("");
+  const [couponIsError, setCouponIsError] = useState(false);
   const [appliedCoupon, setAppliedCoupon] = useState(null);
   const [availableCoupons, setAvailableCoupons] = useState([]);
 
@@ -306,29 +307,40 @@ function CheckoutPage() {
     setCheckoutStep(2);
   }
 
-  async function applyCoupon(code = couponCode) {
-    const codeToApply = code.trim();
+  async function applyCoupon(code) {
+    const rawCode = typeof code === "string" ? code : couponCode;
+    const codeToApply = (rawCode || "").trim();
     if (!codeToApply) {
-      setCouponMessage("Enter a coupon code first.");
+      setCouponMessage("Please enter a coupon code.");
+      setCouponIsError(true);
       setAppliedCoupon(null);
       setTotalAmount(cart?.total || 0);
       return;
     }
     setCouponCode(codeToApply);
     setCouponMessage("Checking coupon…");
+    setCouponIsError(false);
     try {
       const response = await API.post("/store/coupons/validate", {
         code: codeToApply,
         ...(buyNow ? { buyNow } : {}),
       });
-      if (!isSuccess(response)) throw new Error(response.data.message || "Could not apply coupon.");
+      if (!isSuccess(response)) {
+        throw new Error(response.data?.message || "Invalid coupon code.");
+      }
       setAppliedCoupon(response.data.coupon);
       setTotalAmount(response.data.totalAmount);
       setCouponMessage(`Coupon ${response.data.coupon.code} applied. You save ${formatPrice(response.data.discountAmount)}.`);
+      setCouponIsError(false);
     } catch (requestError) {
       setAppliedCoupon(null);
       setTotalAmount(cart?.total || 0);
-      setCouponMessage(requestError.response?.data?.message || requestError.message || "Could not apply coupon.");
+      const errMsg =
+        requestError.response?.data?.message ||
+        requestError.message ||
+        "Invalid coupon code.";
+      setCouponMessage(errMsg);
+      setCouponIsError(true);
     }
   }
   return (
@@ -375,11 +387,13 @@ function CheckoutPage() {
               onCouponCodeChange={(value) => {
                 setCouponCode(value);
                 setCouponMessage("");
+                setCouponIsError(false);
                 setAppliedCoupon(null);
                 setTotalAmount(cart?.total || 0);
               }}
               onApplyCoupon={applyCoupon}
               couponMessage={couponMessage}
+              couponIsError={couponIsError}
               availableCoupons={availableCoupons}
             />
           )}
