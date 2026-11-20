@@ -248,6 +248,7 @@ function UserManagementPage() {
                   <th>Customer</th>
                   <th>Email</th>
                   <th>Registered</th>
+                  <th>Total Spent</th>
                   <th>Status</th>
                   <th>Action</th>
                 </tr>
@@ -267,6 +268,7 @@ function UserManagementPage() {
                         ? new Date(user.createdAt).toLocaleDateString()
                         : "—"}
                     </td>
+                    <td>₹{(user.totalSpent || 0).toLocaleString("en-IN")}</td>
                     <td>
                       <span
                         className={`status-badge ${user.isBlocked ? "status-blocked" : "status-active"

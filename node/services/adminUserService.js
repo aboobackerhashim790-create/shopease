@@ -1,7 +1,7 @@
 import mongoose from "mongoose";
 import User from "../models/User.js";
 import Address from "../models/Address.js";
-
+import Order from "../models/Order.js";
 // ---------------------User Management -------------------------
 
 
@@ -144,7 +144,7 @@ async function listUsers(input) {
       ];
     }
 
-    const [users, totalUsers] = await Promise.all([
+    const [users, totalUsers,spentData] = await Promise.all([
       User.find(userFilter)
         .select("fullName email role isVerified isBlocked createdAt")
         .sort({
@@ -154,11 +154,22 @@ async function listUsers(input) {
         .limit(limit)
         .lean(),
       User.countDocuments(userFilter),
+      Order.aggregate([
+        {$match:{paymentStatus:"Paid"}},
+        {$group:{_id:"$userId",totalSpend:{$sum:"$totalAmount"}}}
+      ])
     ]);
+    const spentMap = Object.fromEntries(
+  spentData.map((entry) => [String(entry._id), entry.totalSpent])
+);
+const usersWithSpent = users.map((user) => ({
+  ...user,
+  totalSpent: spentMap[String(user._id)] || 0,
+}));
     return {
       status: 200,
       body: {
-        users,
+        users:usersWithSpent,
         count: blockedUsersCount,
         pagination: {
           page,
