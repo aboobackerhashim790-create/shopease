@@ -55,17 +55,27 @@ export async function listSupportRequests(input) {
 export async function updateSupportRequestStatus(input) {
   const { requestId } = input.params;
   const status = input.body?.status;
+  const adminResponse = typeof input.body?.adminResponse === "string" ? input.body.adminResponse.trim() : "";
+
   if (!mongoose.isValidObjectId(requestId)) return bad(400, "Invalid help request ID.");
   if (!REQUEST_STATUSES.includes(status)) return bad(400, "Choose a valid request status.");
 
   try {
+    const updateDoc = { status };
+    if (adminResponse) {
+      updateDoc.adminResponse = adminResponse;
+    }
+    if (status === "Resolved" || status === "Closed") {
+      updateDoc.resolvedAt = new Date();
+    }
+
     const request = await SupportRequest.findByIdAndUpdate(
       requestId,
-      { $set: { status } },
+      { $set: updateDoc },
       { returnDocument: "after", runValidators: true },
     ).populate("userId", "fullName email");
     if (!request) return bad(404, "Help request not found.");
-    return { status: 200, body: { message: "Help request status updated.", request } };
+    return { status: 200, body: { message: "Help request status and response updated.", request } };
   } catch (error) {
     console.error("Admin update support request error:", error);
     return bad(500, "Could not update help request status.");

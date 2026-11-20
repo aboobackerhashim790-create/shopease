@@ -60,7 +60,7 @@ export default function HelpCenterPage() {
     </section>
     <section className="help-center__card">
       <div className="help-center__list-heading"><div><h2>Your requests</h2><p>Check the latest status of messages you sent.</p></div><span>{requests.length} request{requests.length === 1 ? "" : "s"}</span></div>
-      {loading ? <p>Loading your requests…</p> : requests.length === 0 ? <p className="help-center__empty">You haven’t sent a help request yet.</p> : <ul className="help-center__requests">{requests.map((request) => <li key={request._id}><div className="help-center__request-top"><div><strong>{request.subject}</strong><small>{request.category} · {formatDate(request.createdAt)}</small></div><span className={`help-center__status status-${request.status.toLowerCase().replaceAll(" ", "-")}`}>{request.status}</span></div><p>{request.message}</p></li>)}</ul>}
+      {loading ? <p>Loading your requests…</p> : requests.length === 0 ? <p className="help-center__empty">You haven’t sent a help request yet.</p> : <ul className="help-center__requests">{requests.map((request) => <li key={request._id}><div className="help-center__request-top"><div><strong>{request.subject}</strong><small>{request.category} · {formatDate(request.createdAt)}</small></div><span className={`help-center__status status-${request.status.toLowerCase().replaceAll(" ", "-")}`}>{request.status}</span></div><p>{request.message}</p>{request.adminResponse && (<div className="help-center__admin-reply"><strong>Support response:</strong><p>{request.adminResponse}</p>{request.resolvedAt && <small>Resolved on {formatDate(request.resolvedAt)}</small>}</div>)}</li>)}</ul>}
     </section>
   </main>;
 }

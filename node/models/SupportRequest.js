@@ -21,6 +21,16 @@ const supportRequestSchema = new mongoose.Schema(
       default: "Open",
       index: true,
     },
+    adminResponse: {
+      type: String,
+      trim: true,
+      maxlength: 3000,
+      default: "",
+    },
+    resolvedAt: {
+      type: Date,
+      default: null,
+    },
   },
   { timestamps: true },
 );

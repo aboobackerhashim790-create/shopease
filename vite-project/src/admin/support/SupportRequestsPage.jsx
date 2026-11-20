@@ -26,6 +26,7 @@ export default function SupportRequestsPage() {
   });
   const [selectedRequest, setSelectedRequest] = useState(null);
   const [selectedStatus, setSelectedStatus] = useState("Open");
+  const [adminResponseText, setAdminResponseText] = useState("");
   const [loading, setLoading] = useState(true);
   const [saving, setSaving] = useState(false);
   const [message, setMessage] = useState("");
@@ -80,6 +81,7 @@ export default function SupportRequestsPage() {
   function openRequest(request) {
     setSelectedRequest(request);
     setSelectedStatus(request.status);
+    setAdminResponseText(request.adminResponse || (request.status === "Resolved" ? "We have resolved your problem. Thank you for reaching out to ShopEase!" : ""));
     setMessage("");
   }
 
@@ -92,7 +94,7 @@ export default function SupportRequestsPage() {
     try {
       const response = await API.patch(
         `/admin/support/${selectedRequest._id}/status`,
-        { status: selectedStatus },
+        { status: selectedStatus, adminResponse: adminResponseText.trim() },
       );
 
       if (!isSuccess(response)) {
@@ -281,7 +283,13 @@ export default function SupportRequestsPage() {
               Request status
               <select
                 value={selectedStatus}
-                onChange={(event) => setSelectedStatus(event.target.value)}
+                onChange={(event) => {
+                  const newStatus = event.target.value;
+                  setSelectedStatus(newStatus);
+                  if (newStatus === "Resolved" && !adminResponseText) {
+                    setAdminResponseText("We have reviewed and resolved your problem. Thank you for reaching out to ShopEase support!");
+                  }
+                }}
               >
                 {STATUSES.map((item) => (
                   <option key={item} value={item}>
@@ -291,6 +299,58 @@ export default function SupportRequestsPage() {
               </select>
             </label>
 
+            <label className="admin-support-status" style={{ marginTop: "12px", display: "grid", gap: "6px" }}>
+              <span>Reply to customer</span>
+              <textarea
+                rows={4}
+                value={adminResponseText}
+                onChange={(e) => setAdminResponseText(e.target.value)}
+                placeholder="Write a message to the customer (e.g. We have resolved your problem...)"
+                style={{
+                  width: "100%",
+                  boxSizing: "border-box",
+                  padding: "10px",
+                  borderRadius: "8px",
+                  border: "1px solid #dce4e0",
+                  fontFamily: "inherit",
+                  fontSize: "13px",
+                  resize: "vertical",
+                }}
+              />
+              <div style={{ display: "flex", gap: "6px", flexWrap: "wrap", marginTop: "4px" }}>
+                <button
+                  type="button"
+                  style={{
+                    padding: "4px 9px",
+                    fontSize: "11px",
+                    background: "#eef6f2",
+                    border: "1px solid #c7ded3",
+                    borderRadius: "6px",
+                    color: "#124b3d",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => setAdminResponseText("We have resolved your problem. Thank you for your patience!")}
+                >
+                  ⚡ Quick: "Resolved your problem"
+                </button>
+                <button
+                  type="button"
+                  style={{
+                    padding: "4px 9px",
+                    fontSize: "11px",
+                    background: "#f0f4f8",
+                    border: "1px solid #d0dbe5",
+                    borderRadius: "6px",
+                    color: "#2c4c68",
+                    cursor: "pointer",
+                  }}
+                  onClick={() => setAdminResponseText("We are currently investigating your issue and working on a solution.")}
+                >
+                  ⚡ Quick: "Investigating"
+                </button>
+              </div>
+            </label>
+
             <div className="admin-support-actions">
               <button type="button" onClick={() => setSelectedRequest(null)}>
                 Close
@@ -298,10 +358,10 @@ export default function SupportRequestsPage() {
               <button
                 className="admin-commerce__primary"
                 type="button"
-                disabled={saving || selectedStatus === selectedRequest.status}
+                disabled={saving || (selectedStatus === selectedRequest.status && adminResponseText === (selectedRequest.adminResponse || ""))}
                 onClick={saveStatus}
               >
-                {saving ? "Saving…" : "Save status"}
+                {saving ? "Saving…" : "Save status & reply"}
               </button>
             </div>
           </section>

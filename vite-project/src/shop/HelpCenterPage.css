@@ -22,4 +22,8 @@
 .help-center__request-top strong,.help-center__request-top small { display: block; }.help-center__request-top small { margin-top: 5px; }
 .help-center__requests li > p { margin: 14px 0 0; color: #47564f; line-height: 1.55; white-space: pre-wrap; overflow-wrap: anywhere; }
 .help-center__status { padding: 5px 9px; color: #8a5a10; background: #fff3d8; border-radius: 999px; font-size: 12px; font-weight: 700; white-space: nowrap; }.help-center__status.status-in-progress { color: #24579b; background: #eaf2ff; }.help-center__status.status-resolved,.help-center__status.status-closed { color: #08734d; background: #e6f5ee; }
+.help-center__admin-reply { margin-top: 14px; padding: 12px 14px; background: #f0f7f3; border-left: 3px solid #124b3c; border-radius: 6px; }
+.help-center__admin-reply strong { display: block; color: #124b3c; font-size: 13px; font-weight: 700; margin-bottom: 4px; }
+.help-center__admin-reply p { margin: 0; color: #2d3b35; font-size: 13px; line-height: 1.5; white-space: pre-wrap; }
+.help-center__admin-reply small { display: block; margin-top: 6px; color: #72827a; font-size: 11px; }
 @media(max-width:600px) { .help-center { padding-top: 10px; }.help-center__card { padding: 16px; }.help-center__request-top { align-items: flex-start; flex-direction: column; } }
