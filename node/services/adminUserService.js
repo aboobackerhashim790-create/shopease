@@ -156,7 +156,7 @@ async function listUsers(input) {
       User.countDocuments(userFilter),
       Order.aggregate([
         {$match:{paymentStatus:"Paid"}},
-        {$group:{_id:"$userId",totalSpend:{$sum:"$totalAmount"}}}
+        {$group:{_id:"$userId",totalSpent:{$sum:"$totalAmount"}}}
       ])
     ]);
     const spentMap = Object.fromEntries(
