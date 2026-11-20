@@ -30,6 +30,268 @@ function UserManagementPage() {
   const [message, setMessage] = useState("");
   const [updatingUserId, setUpdatingUserId] = useState(null);
   const [userToToggle, setUserToToggle] = useState(null);
+  const [exportingPdf, setExportingPdf] = useState(false);
+
+  function escapeHtml(value = "") {
+    return String(value).replace(/[&<>"']/g, (character) => ({
+      "&": "&amp;",
+      "<": "&lt;",
+      ">": "&gt;",
+      '"': "&quot;",
+      "'": "&#39;",
+    })[character]);
+  }
+
+  async function handleDownloadPdf() {
+    setExportingPdf(true);
+    try {
+      const params = new URLSearchParams({
+        page: "1",
+        limit: "1000",
+        search,
+        sort,
+        status,
+      });
+      if (fromDate) params.set("fromDate", fromDate);
+      if (toDate) params.set("toDate", toDate);
+
+      const response = await API.get(`/admin/users?${params}`);
+      const exportList = isSuccess(response) && response.data?.users ? response.data.users : users;
+
+      if (!exportList || exportList.length === 0) {
+        alert("No customers found to export.");
+        return;
+      }
+
+      const printWindow = window.open("", "_blank", "width=1000,height=900");
+      if (!printWindow) {
+        alert("Please allow popups in your browser to view and download the PDF report.");
+        return;
+      }
+
+      const tableRows = exportList.map((customer, index) => `
+        <tr>
+          <td style="text-align: center; color: #64748b; font-weight: 600;">${index + 1}</td>
+          <td style="font-weight: 600; color: #0f172a;">${escapeHtml(customer.fullName || "—")}</td>
+          <td style="color: #334155;">${escapeHtml(customer.email || "—")}</td>
+          <td>${customer.createdAt ? new Date(customer.createdAt).toLocaleDateString("en-IN", { year: "numeric", month: "short", day: "numeric" }) : "—"}</td>
+          <td style="font-weight: 700; color: #124b3d; text-align: right;">₹${Number(customer.totalSpent || 0).toLocaleString("en-IN")}</td>
+          <td style="text-align: center;">
+            <span class="badge ${customer.isBlocked ? "badge-blocked" : "badge-active"}">
+              ${customer.isBlocked ? "Blocked" : "Active"}
+            </span>
+          </td>
+        </tr>
+      `).join("");
+
+      const totalRevenue = exportList.reduce((sum, u) => sum + (Number(u.totalSpent) || 0), 0);
+      const activeCount = exportList.filter((u) => !u.isBlocked).length;
+      const blockedCount = exportList.filter((u) => u.isBlocked).length;
+      const formattedDate = new Intl.DateTimeFormat("en-IN", {
+        dateStyle: "full",
+        timeStyle: "short",
+      }).format(new Date());
+
+      printWindow.document.write(`<!doctype html>
+        <html>
+          <head>
+            <meta charset="utf-8">
+            <title>ShopEase Customer Report - ${new Date().toISOString().slice(0, 10)}</title>
+            <style>
+              @page {
+                size: A4 landscape;
+                margin: 12mm 15mm;
+              }
+              * { box-sizing: border-box; }
+              body {
+                font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Arial, sans-serif;
+                color: #1e293b;
+                margin: 0;
+                padding: 16px;
+                line-height: 1.4;
+                font-size: 12px;
+                background: #ffffff;
+              }
+              .report-header {
+                display: flex;
+                justify-content: space-between;
+                align-items: flex-start;
+                border-bottom: 2px solid #124b3d;
+                padding-bottom: 12px;
+                margin-bottom: 16px;
+              }
+              .brand-title {
+                margin: 0;
+                font-size: 24px;
+                font-weight: 800;
+                color: #124b3d;
+                letter-spacing: -0.5px;
+              }
+              .report-subtitle {
+                margin: 4px 0 0;
+                color: #64748b;
+                font-size: 13px;
+                font-weight: 500;
+              }
+              .report-meta {
+                text-align: right;
+                font-size: 11px;
+                color: #64748b;
+              }
+              .report-meta div {
+                margin-bottom: 3px;
+              }
+              .stat-cards {
+                display: grid;
+                grid-template-columns: repeat(4, 1fr);
+                gap: 12px;
+                margin-bottom: 18px;
+              }
+              .stat-card {
+                padding: 10px 14px;
+                background: #f8fafc;
+                border: 1px solid #e2e8f0;
+                border-radius: 8px;
+              }
+              .stat-card span {
+                display: block;
+                font-size: 10px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+                font-weight: 700;
+                color: #64748b;
+              }
+              .stat-card strong {
+                display: block;
+                margin-top: 3px;
+                font-size: 17px;
+                font-weight: 800;
+                color: #0f172a;
+              }
+              table {
+                width: 100%;
+                border-collapse: collapse;
+                margin-top: 8px;
+              }
+              th {
+                background: #f1f5f9;
+                color: #334155;
+                font-weight: 700;
+                text-align: left;
+                padding: 9px 10px;
+                border-top: 1px solid #cbd5e1;
+                border-bottom: 2px solid #cbd5e1;
+                font-size: 11px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+              }
+              td {
+                padding: 9px 10px;
+                border-bottom: 1px solid #e2e8f0;
+              }
+              tr:nth-child(even) {
+                background: #fafafa;
+              }
+              .badge {
+                display: inline-block;
+                padding: 3px 9px;
+                border-radius: 999px;
+                font-size: 10px;
+                font-weight: 700;
+                text-transform: uppercase;
+              }
+              .badge-active {
+                background: #dcfce7;
+                color: #166534;
+              }
+              .badge-blocked {
+                background: #fee2e2;
+                color: #991b1b;
+              }
+              .report-footer {
+                margin-top: 24px;
+                padding-top: 12px;
+                border-top: 1px solid #e2e8f0;
+                display: flex;
+                justify-content: space-between;
+                font-size: 10px;
+                color: #94a3b8;
+              }
+              @media print {
+                body { padding: 0; }
+                .no-print { display: none; }
+              }
+            </style>
+          </head>
+          <body>
+            <div class="report-header">
+              <div>
+                <h1 class="brand-title">ShopEase</h1>
+                <p class="report-subtitle">Customer Management &amp; Revenue Report</p>
+              </div>
+              <div class="report-meta">
+                <div><strong>Generated on:</strong> ${escapeHtml(formattedDate)}</div>
+                <div><strong>Filter:</strong> ${escapeHtml(status === "all" ? "All Customers" : status === "active" ? "Active Only" : "Blocked Only")}</div>
+                ${search ? `<div><strong>Search:</strong> "${escapeHtml(search)}"</div>` : ""}
+              </div>
+            </div>
+
+            <div class="stat-cards">
+              <div class="stat-card">
+                <span>Total Customers</span>
+                <strong>${exportList.length}</strong>
+              </div>
+              <div class="stat-card">
+                <span>Active Customers</span>
+                <strong style="color: #166534;">${activeCount}</strong>
+              </div>
+              <div class="stat-card">
+                <span>Blocked Customers</span>
+                <strong style="color: #991b1b;">${blockedCount}</strong>
+              </div>
+              <div class="stat-card">
+                <span>Total Revenue Generated</span>
+                <strong style="color: #124b3d;">₹${totalRevenue.toLocaleString("en-IN")}</strong>
+              </div>
+            </div>
+
+            <table>
+              <thead>
+                <tr>
+                  <th style="width: 38px; text-align: center;">#</th>
+                  <th>Customer Name</th>
+                  <th>Email Address</th>
+                  <th>Registered Date</th>
+                  <th style="text-align: right;">Total Spent</th>
+                  <th style="text-align: center; width: 100px;">Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                ${tableRows}
+              </tbody>
+            </table>
+
+            <div class="report-footer">
+              <span>ShopEase Administration · Confidential System Report</span>
+              <span>Page 1 of 1</span>
+            </div>
+
+            <script>
+              window.onload = function() {
+                window.print();
+              };
+            </script>
+          </body>
+        </html>
+      `);
+      printWindow.document.close();
+    } catch (err) {
+      console.error("PDF export error:", err);
+      alert("Failed to export PDF: " + (err.message || "Unknown error"));
+    } finally {
+      setExportingPdf(false);
+    }
+  }
 
   useEffect(() => {
     let active = true;
@@ -164,9 +426,31 @@ function UserManagementPage() {
           </p>
         </div>
 
-        <div className="customers-total">
-          <span>Total customers</span>
-          <strong>{pagination.totalUsers}</strong>
+        <div className="customers-heading-actions">
+          <button
+            type="button"
+            className="button download-pdf-btn"
+            onClick={handleDownloadPdf}
+            disabled={exportingPdf || loading}
+            title="Export and print customer list as PDF"
+          >
+            {exportingPdf ? (
+              <span>Generating PDF…</span>
+            ) : (
+              <>
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                  <polyline points="7 10 12 15 17 10"/>
+                  <line x1="12" y1="15" x2="12" y2="3"/>
+                </svg>
+                <span>Download PDF</span>
+              </>
+            )}
+          </button>
+          <div className="customers-total">
+            <span>Total customers</span>
+            <strong>{pagination.totalUsers}</strong>
+          </div>
         </div>
       </div>
 

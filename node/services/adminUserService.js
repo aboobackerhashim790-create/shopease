@@ -83,7 +83,7 @@ async function listUsers(input) {
     const { fromDate, toDate } = input.query || {};
     const page = Math.max(Number.parseInt(input.query.page, 10) || 1, 1);
     const requestedLimit = Number.parseInt(input.query.limit, 10) || 10;
-    const limit = Math.min(Math.max(requestedLimit, 1), 50);
+    const limit = Math.min(Math.max(requestedLimit, 1), 1000);
     const searchInput = input.query?.search;
     if (searchInput !== undefined && typeof searchInput !== "string") {
       return { status: 400, body: { message: "Search must be text." } };
