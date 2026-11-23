@@ -1,4 +1,5 @@
 import * as profileService from "../services/profileService.js";
+import { clearAuthTokens, revokeUserRefreshSessions } from "../utils/jwtAuth.js";
 
 function makeServiceInput(req) {
   return {
@@ -32,6 +33,10 @@ export async function verifyEmailChange(req, res) {
 
 export async function changeMyPassword(req, res) {
   const result = await profileService.changeMyPassword(makeServiceInput(req));
+  if (result.status === 200) {
+    await revokeUserRefreshSessions(req.user._id);
+    clearAuthTokens(res);
+  }
   return res.status(result.status).json(result.body);
 }
 

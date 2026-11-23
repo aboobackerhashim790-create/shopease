@@ -11,6 +11,7 @@ import {
   signup,
   verifyEmail,
   login,
+  refresh,
   logout,
   googleLogin,
   requestPasswordReset,
@@ -23,6 +24,7 @@ router.post("/resend-verification", otpLimiter, resendVerification);
 router.post("/signup", signupLimiter, signup);
 router.post("/verify-email", otpLimiter, verifyEmail);
 router.post("/login", loginLimiter, login);
+router.post("/refresh", refresh);
 router.post("/logout", logout);
 router.post("/google", loginLimiter, googleLogin);
 router.post("/forgot-password", otpLimiter, requestPasswordReset);

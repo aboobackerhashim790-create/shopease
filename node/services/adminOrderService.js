@@ -446,7 +446,10 @@ export async function reviewReturn(input) {
 
 export async function getDashboardSummary() {
   try {
-    const [orders, customers, blockedUsers, products, revenue, recentOrders] = await Promise.all([
+    const sevenDaysAgo = new Date();
+    sevenDaysAgo.setHours(0, 0, 0, 0);
+    sevenDaysAgo.setDate(sevenDaysAgo.getDate() - 6);
+    const [orders, customers, blockedUsers, products, revenue, recentOrders, revenueByDay] = await Promise.all([
       Order.countDocuments(),
       User.countDocuments({ role: "customer" }),
       User.countDocuments({ role: "customer", isBlocked: true }),
@@ -509,11 +512,44 @@ export async function getDashboardSummary() {
             },
           },
         },
-      ]),
+      ]), 
       Order.find().sort({ createdAt: -1 }).limit(6).populate("userId", "fullName email").lean(),
+      Order.aggregate([
+        { $match: { paymentStatus: "Paid", orderStatus: { $ne: "Cancelled" }, createdAt: { $gte: sevenDaysAgo } } },
+        { $project: {
+          createdAt: 1,
+          totalAmount: 1,
+          subtotal: 1,
+          discountAmount: 1,
+          legacyReturnAccepted: { $eq: ["$returnRequest.status", "Accepted"] },
+          returnedItemsAmount: {
+            $reduce: {
+              input: { $ifNull: ["$items", []] },
+              initialValue: 0,
+              in: { $add: ["$$value", { $cond: [
+                { $eq: ["$$this.returnRequest.status", "Accepted"] },
+                { $cond: [{ $gt: ["$subtotal", 0] },
+                  { $subtract: ["$$this.itemTotal", { $multiply: ["$discountAmount", { $divide: ["$$this.itemTotal", "$subtotal"] }] }] },
+                  "$$this.itemTotal"] },
+                0,
+              ] }] },
+            },
+          },
+        } },
+        { $project: { day: { $dateTrunc: { date: "$createdAt", unit: "day" } }, amount: { $cond: ["$legacyReturnAccepted", 0, { $max: [0, { $subtract: ["$totalAmount", "$returnedItemsAmount"] }] }] } } },
+        { $group: { _id: "$day", amount: { $sum: "$amount" } } },
+        { $sort: { _id: 1 } },
+      ]),
     ]);
     const orderStatus = await Order.aggregate([{ $group: { _id: "$orderStatus", count: { $sum: 1 } } }]);
-    return { status: 200, body: { summary: { totalOrders: orders, customers, blockedUsers, listedProducts: products, paidRevenue: revenue[0]?.total || 0, orderStatus }, recentOrders } };
+    const revenueDays = Array.from({ length: 7 }, (_, index) => {
+      const day = new Date(sevenDaysAgo);
+      day.setDate(day.getDate() + index);
+      const key = day.toISOString().slice(0, 10);
+      const match = revenueByDay.find((item) => new Date(item._id).toISOString().slice(0, 10) === key);
+      return { date: key, amount: match?.amount || 0 };
+    });
+    return { status: 200, body: { summary: { totalOrders: orders, customers, blockedUsers, listedProducts: products, paidRevenue: revenue[0]?.total || 0, orderStatus }, revenueDays, recentOrders } };
   } catch (error) {
     console.error("Admin dashboard error:", error);
     return bad(500, "Could not load dashboard.");
