@@ -10,7 +10,7 @@ describe("Address & Profile Validation Test Suite", () => {
     addressLine2: "Near Metro Station",
     city: "Kochi",
     state: "Kerala",
-    postalCode: "682001",
+    postalCode: "672001",
     country: "India",
   };
 
