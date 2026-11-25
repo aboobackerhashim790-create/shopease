@@ -52,6 +52,15 @@ export function validateCoupon(body = {}) {
   return { value: { code, discountType, discountValue, minimumSubtotal, maximumDiscount, usageLimit, firstOrderOnly, startsAt, expiresAt, description: String(body.description || "").trim().slice(0, 200) } };
 }
 
+async function couponCodeAlreadyExists(code, excludeCouponId = null) {
+  const normalizedCode = String(code || "").trim().toUpperCase();
+  if (!/^[A-Z0-9_-]{3,40}$/.test(normalizedCode)) return false;
+
+  const filter = { code: normalizedCode };
+  if (excludeCouponId) filter._id = { $ne: excludeCouponId };
+  return Boolean(await Coupon.exists(filter));
+}
+
 export async function listCoupons(input) {
   try {
     const page = Math.max(parseInt(input.query.page, 10) || 1, 1);
@@ -73,10 +82,18 @@ export async function listCoupons(input) {
 }
 
 export async function createCoupon(input) {
-  const parsed = validateCoupon(input.body || {});
-  if (parsed.errors) return result(400, "Please correct the highlighted fields.", { errors: parsed.errors });
+  const body = input.body || {};
+  const parsed = validateCoupon(body);
   try {
-    const coupon = await Coupon.create({ ...parsed.value, active: input.body.active !== false });
+    const errors = { ...(parsed.errors || {}) };
+    if (await couponCodeAlreadyExists(body.code)) {
+      errors.code = "That coupon code is already in use.";
+    }
+    if (Object.keys(errors).length > 0) {
+      return result(400, "Please correct the highlighted fields.", { errors });
+    }
+
+    const coupon = await Coupon.create({ ...parsed.value, active: body.active !== false });
     return { status: 201, body: { message: "Coupon created.", coupon } };
   } catch (error) {
     if (error.code === 11000) {
@@ -91,10 +108,18 @@ export async function createCoupon(input) {
 export async function updateCoupon(input) {
   const { couponId } = input.params;
   if (!mongoose.isValidObjectId(couponId)) return result(400, "Invalid coupon ID.");
-  const parsed = validateCoupon(input.body || {});
-  if (parsed.errors) return result(400, "Please correct the highlighted fields.", { errors: parsed.errors });
+  const body = input.body || {};
+  const parsed = validateCoupon(body);
   try {
-    const coupon = await Coupon.findByIdAndUpdate(couponId, { $set: { ...parsed.value, active: input.body.active !== false } }, { returnDocument: "after", runValidators: true });
+    const errors = { ...(parsed.errors || {}) };
+    if (await couponCodeAlreadyExists(body.code, couponId)) {
+      errors.code = "That coupon code is already in use.";
+    }
+    if (Object.keys(errors).length > 0) {
+      return result(400, "Please correct the highlighted fields.", { errors });
+    }
+
+    const coupon = await Coupon.findByIdAndUpdate(couponId, { $set: { ...parsed.value, active: body.active !== false } }, { returnDocument: "after", runValidators: true });
     if (!coupon) return result(404, "Coupon not found.");
     return { status: 200, body: { message: "Coupon updated.", coupon } };
   } catch (error) {
