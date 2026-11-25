@@ -331,7 +331,7 @@ export default function SupportRequestsPage() {
                   }}
                   onClick={() => setAdminResponseText("We have resolved your problem. Thank you for your patience!")}
                 >
-                  ⚡ Quick: "Resolved your problem"
+                  ⚡ Quick: &quot;Resolved your problem&quot;
                 </button>
                 <button
                   type="button"
@@ -346,7 +346,7 @@ export default function SupportRequestsPage() {
                   }}
                   onClick={() => setAdminResponseText("We are currently investigating your issue and working on a solution.")}
                 >
-                  ⚡ Quick: "Investigating"
+                  ⚡ Quick: &quot;Investigating&quot;
                 </button>
               </div>
             </label>
