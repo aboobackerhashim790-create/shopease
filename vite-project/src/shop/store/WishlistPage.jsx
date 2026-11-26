@@ -1,10 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import {
-  Link,
-  useLocation,
-  useNavigate,
-  useOutletContext,
-} from "react-router-dom";
+import { Link, useLocation, useNavigate, useOutletContext } from "react-router-dom";
 import API, { isSuccess } from "../../api/client.js";
 import StoreProductCard from "./StoreProductCard.jsx";
 import "./StorePages.css";
@@ -58,13 +53,9 @@ function WishlistPage() {
   function removeFromWishlist(product) {
     runProtectedAction(() => {
       (async () => {
-        const response = await API.delete(
-          `/store/wishlist/items/${product._id}`,
-        );
+        const response = await API.delete(`/store/wishlist/items/${product._id}`);
         if (!isSuccess(response))
-          throw new Error(
-            response.data.message || "Could not remove this item.",
-          );
+          throw new Error(response.data.message || "Could not remove this item.");
         await Promise.all([loadWishlist(), refreshShopCounts()]);
       })().catch((requestError) =>
         setError(requestError.response?.data?.message || requestError.message),
@@ -81,12 +72,8 @@ function WishlistPage() {
           quantity: 1,
         });
         if (!isSuccess(response))
-          throw new Error(
-            response.data.message || "Could not add this item to your cart.",
-          );
-        setNotice(
-          `${product.name} was added to your cart and removed from your wishlist.`,
-        );
+          throw new Error(response.data.message || "Could not add this item to your cart.");
+        setNotice(`${product.name} was added to your cart and removed from your wishlist.`);
         await Promise.all([loadWishlist(), refreshShopCounts()]);
       })().catch((requestError) =>
         setError(requestError.response?.data?.message || requestError.message),
@@ -95,9 +82,11 @@ function WishlistPage() {
   }
 
   function buyNow(product, variantId) {
-    runProtectedAction(() => navigate("/home/checkout", {
-      state: { buyNow: { productId: product._id, variantId: variantId || null, quantity: 1 } },
-    }));
+    runProtectedAction(() =>
+      navigate("/home/checkout", {
+        state: { buyNow: { productId: product._id, variantId: variantId || null, quantity: 1 } },
+      }),
+    );
   }
 
   if (loading)
@@ -113,8 +102,7 @@ function WishlistPage() {
           <span className="store-eyebrow">SAVED FOR LATER</span>
           <h1>Your wishlist</h1>
           <p className="store-muted">
-            Saved items stay here until you remove them or add them to your
-            cart.
+            Saved items stay here until you remove them or add them to your cart.
           </p>
         </div>
       </div>
@@ -132,10 +120,7 @@ function WishlistPage() {
         <div className="store-panel store-empty">
           <h2>Your wishlist is empty</h2>
           <p className="store-muted">Save products you may want later.</p>
-          <Link
-            className="store-button store-button--primary"
-            to="/home/products"
-          >
+          <Link className="store-button store-button--primary" to="/home/products">
             Browse products
           </Link>
         </div>

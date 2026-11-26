@@ -34,12 +34,7 @@ function LogoutButton({ className = "" }) {
 
   return (
     <span className="logout-control">
-      <button
-        className={className}
-        type="button"
-        onClick={handleLogout}
-        disabled={busy}
-      >
+      <button className={className} type="button" onClick={handleLogout} disabled={busy}>
         {busy ? "Signing out…" : "Sign out"}
       </button>
       {error && (

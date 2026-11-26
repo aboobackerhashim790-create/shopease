@@ -29,8 +29,7 @@ function UserDetailPage() {
     };
   }, [userId]);
 
-  if (loading)
-    return <p className="customer-detail-state">Loading customer…</p>;
+  if (loading) return <p className="customer-detail-state">Loading customer…</p>;
   if (error)
     return (
       <section className="customer-detail-page">
@@ -50,10 +49,7 @@ function UserDetailPage() {
       <header className="customer-detail-heading">
         <div className="customer-detail-avatar">
           {customer.profilePhotoUrl ? (
-            <img
-              src={customer.profilePhotoUrl}
-              alt={`${customer.fullName}'s profile`}
-            />
+            <img src={customer.profilePhotoUrl} alt={`${customer.fullName}'s profile`} />
           ) : (
             customer.fullName?.charAt(0)?.toUpperCase() || "C"
           )}
@@ -63,9 +59,7 @@ function UserDetailPage() {
           <h1>{customer.fullName}</h1>
           <p>{customer.email}</p>
         </div>
-        <span
-          className={`status-badge ${customer.isBlocked ? "status-blocked" : "status-active"}`}
-        >
+        <span className={`status-badge ${customer.isBlocked ? "status-blocked" : "status-active"}`}>
           {customer.isBlocked ? "Blocked" : "Active"}
         </span>
       </header>
@@ -96,9 +90,7 @@ function UserDetailPage() {
           <div>
             <span>Joined</span>
             <strong>
-              {customer.createdAt
-                ? new Date(customer.createdAt).toLocaleDateString()
-                : "—"}
+              {customer.createdAt ? new Date(customer.createdAt).toLocaleDateString() : "—"}
             </strong>
           </div>
         </div>
@@ -108,25 +100,20 @@ function UserDetailPage() {
           <div>
             <h2>Saved addresses</h2>
             <p>
-              {addresses.length}{" "}
-              {addresses.length === 1 ? "address" : "addresses"} saved by this
+              {addresses.length} {addresses.length === 1 ? "address" : "addresses"} saved by this
               customer.
             </p>
           </div>
         </div>
         {addresses.length === 0 ? (
-          <p className="customer-detail-state">
-            This customer has not saved any addresses.
-          </p>
+          <p className="customer-detail-state">This customer has not saved any addresses.</p>
         ) : (
           <div className="customer-address-grid">
             {addresses.map((address) => (
               <article className="customer-address-card" key={address._id}>
                 <div className="customer-address-top">
                   <strong>{address.label || "Address"}</strong>
-                  {address.isDefault && (
-                    <span className="default-address-badge">DEFAULT</span>
-                  )}
+                  {address.isDefault && <span className="default-address-badge">DEFAULT</span>}
                 </div>
                 <p>
                   {address.fullName} · {address.phone}

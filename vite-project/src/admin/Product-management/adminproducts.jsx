@@ -5,11 +5,7 @@ import ProductFormModal from "./ProductFormModal.jsx";
 import { ProductCropModal, ProductDeleteModal } from "./ProductDialogs.jsx";
 import "./adminproducts.css";
 
-const SUPPORTED_IMAGE_TYPES = new Set([
-  "image/jpeg",
-  "image/png",
-  "image/webp",
-]);
+const SUPPORTED_IMAGE_TYPES = new Set(["image/jpeg", "image/png", "image/webp"]);
 
 function isSupportedImage(file) {
   const fileName = file.name.toLowerCase();
@@ -17,10 +13,10 @@ function isSupportedImage(file) {
     return false;
   }
 
-  return SUPPORTED_IMAGE_TYPES.has(file.type.toLowerCase()) && /\.(jpe?g|png|webp)$/i.test(fileName);
+  return (
+    SUPPORTED_IMAGE_TYPES.has(file.type.toLowerCase()) && /\.(jpe?g|png|webp)$/i.test(fileName)
+  );
 }
-
-
 
 function emptyForm() {
   return {
@@ -70,14 +66,19 @@ function validateProductForm(form, productImageCount) {
 
   form.variants.forEach((variant, index) => {
     if (!variant.sku.trim()) errors[`variants.${index}.sku`] = "Variant SKU is required.";
-    if (variant.price === "" || !Number.isFinite(Number(variant.price)) || Number(variant.price) < 0) {
+    if (
+      variant.price === "" ||
+      !Number.isFinite(Number(variant.price)) ||
+      Number(variant.price) < 0
+    ) {
       errors[`variants.${index}.price`] = "Enter a valid non-negative price.";
     }
     if (!Number.isInteger(Number(variant.stockQuantity)) || Number(variant.stockQuantity) < 0) {
       errors[`variants.${index}.stockQuantity`] = "Stock must be a non-negative whole number.";
     }
     if (variant.compareAtPrice !== "" && Number(variant.compareAtPrice) <= Number(variant.price)) {
-      errors[`variants.${index}.compareAtPrice`] = "Compare-at price must be higher than the price.";
+      errors[`variants.${index}.compareAtPrice`] =
+        "Compare-at price must be higher than the price.";
     }
   });
 
@@ -91,7 +92,7 @@ function AdminProducts() {
   const [search, setSearch] = useState("");
   const [categoryId, setCategoryId] = useState("");
   const [statusFilter, setStatusFilter] = useState("all");
-  const [sort, setSort] = useState("newest")
+  const [sort, setSort] = useState("newest");
   const [page, setPage] = useState(1);
   const [pagination, setPagination] = useState({
     totalProducts: 0,
@@ -114,7 +115,6 @@ function AdminProducts() {
   const [croppedAreaPixels, setCroppedAreaPixels] = useState(null);
   const [cropping, setCropping] = useState(false);
   const activeCropItem = cropQueue[0];
-
 
   const pageOptions = [];
   const pageCount = pagination.totalPages || 1;
@@ -147,12 +147,8 @@ function AdminProducts() {
       if (!isSuccess(response)) {
         throw new Error(response.data.message || "Could not load products.");
       }
-      setProducts(
-        Array.isArray(response.data.products) ? response.data.products : [],
-      );
-      setPagination(
-        response.data.pagination || { totalProducts: 0, totalPages: 0 },
-      );
+      setProducts(Array.isArray(response.data.products) ? response.data.products : []);
+      setPagination(response.data.pagination || { totalProducts: 0, totalPages: 0 });
     } catch (requestError) {
       setError(requestError.message || "Could not load products.");
     } finally {
@@ -172,16 +168,13 @@ function AdminProducts() {
           params: { page: 1, limit: 50 },
         });
         if (!isSuccess(response)) {
-          throw new Error(
-            response.data.message || "Could not load categories.",
-          );
+          throw new Error(response.data.message || "Could not load categories.");
         }
         if (active) {
           setCategories(response.data.categories || []);
         }
       } catch (requestError) {
-        if (active)
-          setError(requestError.message || "Could not load categories.");
+        if (active) setError(requestError.message || "Could not load categories.");
       }
     }
     loadCategories();
@@ -242,8 +235,7 @@ function AdminProducts() {
         storage: variant.storage.trim(),
       },
       price: Number(variant.price),
-      compareAtPrice:
-        variant.compareAtPrice === "" ? null : Number(variant.compareAtPrice),
+      compareAtPrice: variant.compareAtPrice === "" ? null : Number(variant.compareAtPrice),
       stockQuantity: Number(variant.stockQuantity),
       active: variant.active,
       images: [...variant.images, ...variantImageUrls[index]],
@@ -258,9 +250,7 @@ function AdminProducts() {
       ...(!variants.length && form.sku.trim() ? { sku: form.sku.trim() } : {}),
       price: variants.length ? null : Number(form.price),
       compareAtPrice:
-        variants.length || form.compareAtPrice === ""
-          ? null
-          : Number(form.compareAtPrice),
+        variants.length || form.compareAtPrice === "" ? null : Number(form.compareAtPrice),
       stockQuantity: variants.length ? 0 : Number(form.stockQuantity),
       images,
       isFeatured: form.isFeatured,
@@ -280,15 +270,10 @@ function AdminProducts() {
     try {
       const uploadedUrls = await uploadImagesToCloudinary(selectedImageFiles);
       const variantImageUrls = await Promise.all(
-        form.variants.map((variant) =>
-          uploadImagesToCloudinary(variant.imageFiles),
-        ),
+        form.variants.map((variant) => uploadImagesToCloudinary(variant.imageFiles)),
       );
 
-      const payload = makeProductPayload(
-        [...form.images, ...uploadedUrls],
-        variantImageUrls,
-      );
+      const payload = makeProductPayload([...form.images, ...uploadedUrls], variantImageUrls);
       const response = editingProduct
         ? await API.patch(`/admin/products/${editingProduct._id}`, payload)
         : await API.post("/admin/products", payload);
@@ -309,14 +294,21 @@ function AdminProducts() {
       if (Object.keys(serverFieldErrors).length) {
         setFieldErrors((current) => ({ ...current, ...serverFieldErrors }));
       } else {
-        const message = requestError.response?.data?.message || requestError.message || "Could not save product.";
+        const message =
+          requestError.response?.data?.message || requestError.message || "Could not save product.";
         if (/name/i.test(message)) setFieldErrors((current) => ({ ...current, name: message }));
-        else if (/slug/i.test(message)) setFieldErrors((current) => ({ ...current, slug: message }));
-        else if (/description/i.test(message)) setFieldErrors((current) => ({ ...current, description: message }));
-        else if (/category/i.test(message)) setFieldErrors((current) => ({ ...current, categoryId: message }));
-        else if (/price/i.test(message)) setFieldErrors((current) => ({ ...current, price: message }));
-        else if (/stock/i.test(message)) setFieldErrors((current) => ({ ...current, stockQuantity: message }));
-        else if (/image/i.test(message)) setFieldErrors((current) => ({ ...current, images: message }));
+        else if (/slug/i.test(message))
+          setFieldErrors((current) => ({ ...current, slug: message }));
+        else if (/description/i.test(message))
+          setFieldErrors((current) => ({ ...current, description: message }));
+        else if (/category/i.test(message))
+          setFieldErrors((current) => ({ ...current, categoryId: message }));
+        else if (/price/i.test(message))
+          setFieldErrors((current) => ({ ...current, price: message }));
+        else if (/stock/i.test(message))
+          setFieldErrors((current) => ({ ...current, stockQuantity: message }));
+        else if (/image/i.test(message))
+          setFieldErrors((current) => ({ ...current, images: message }));
         else setError(message);
       }
     } finally {
@@ -331,9 +323,7 @@ function AdminProducts() {
         active: !product.active,
       });
       if (!isSuccess(response)) {
-        throw new Error(
-          response.data.message || "Could not change product status.",
-        );
+        throw new Error(response.data.message || "Could not change product status.");
       }
       await loadProducts();
     } catch (requestError) {
@@ -345,15 +335,12 @@ function AdminProducts() {
     if (!productToDelete) return;
     setError("");
     try {
-      const response = await API.delete(
-        `/admin/products/${productToDelete._id}`,
-      );
+      const response = await API.delete(`/admin/products/${productToDelete._id}`);
       if (!isSuccess(response)) {
         throw new Error(response.data.message || "Could not delete product.");
       }
       setProductToDelete(null);
-      if (products.length === 1 && page > 1)
-        setPage((currentPage) => currentPage - 1);
+      if (products.length === 1 && page > 1) setPage((currentPage) => currentPage - 1);
       else await loadProducts();
     } catch (requestError) {
       setError(requestError.message || "Could not delete product.");
@@ -409,9 +396,7 @@ function AdminProducts() {
   function removeVariant(index) {
     setForm((current) => ({
       ...current,
-      variants: current.variants.filter(
-        (_, variantIndex) => variantIndex !== index,
-      ),
+      variants: current.variants.filter((_, variantIndex) => variantIndex !== index),
     }));
   }
 
@@ -427,11 +412,8 @@ function AdminProducts() {
       setFieldErrors((current) => ({ ...current, images: imageError }));
       return;
     }
-    const pendingProductFiles = cropQueue.filter(
-      (item) => item.target.type === "product",
-    ).length;
-    const availableSlots =
-      5 - form.images.length - selectedImageFiles.length - pendingProductFiles;
+    const pendingProductFiles = cropQueue.filter((item) => item.target.type === "product").length;
+    const availableSlots = 5 - form.images.length - selectedImageFiles.length - pendingProductFiles;
     if (imageFiles.length > availableSlots) {
       setFieldErrors((current) => ({
         ...current,
@@ -459,12 +441,9 @@ function AdminProducts() {
       return;
     }
     const pendingFiles = cropQueue.filter(
-      (item) =>
-        item.target.type === "variant" &&
-        item.target.clientId === variant.clientId,
+      (item) => item.target.type === "variant" && item.target.clientId === variant.clientId,
     ).length;
-    const slots =
-      5 - variant.images.length - variant.imageFiles.length - pendingFiles;
+    const slots = 5 - variant.images.length - variant.imageFiles.length - pendingFiles;
     if (imageFiles.length > slots) {
       setFieldErrors((current) => ({
         ...current,
@@ -480,10 +459,7 @@ function AdminProducts() {
   }
 
   function enqueueImagesForCropping(files, target) {
-    setCropQueue((current) => [
-      ...current,
-      ...files.map((file) => ({ file, target })),
-    ]);
+    setCropQueue((current) => [...current, ...files.map((file) => ({ file, target }))]);
   }
 
   async function useCroppedImage() {
@@ -529,9 +505,7 @@ function AdminProducts() {
     files.forEach((file) => imageFormData.append("images", file));
     const response = await API.post("/admin/products/images", imageFormData);
     if (!isSuccess(response)) {
-      throw new Error(
-        response.data.message || "Could not upload product images.",
-      );
+      throw new Error(response.data.message || "Could not upload product images.");
     }
     return (response.data.images || []).map((image) => image.url);
   }
@@ -546,11 +520,7 @@ function AdminProducts() {
             Add products and manage your store inventory.
           </p>
         </div>
-        <button
-          className="products-primary-button"
-          type="button"
-          onClick={openCreateModal}
-        >
+        <button className="products-primary-button" type="button" onClick={openCreateModal}>
           Create product
         </button>
       </header>
@@ -635,7 +605,6 @@ function AdminProducts() {
             >
               <option value="newest">Newest first</option>
               <option value="oldest">Oldest first</option>
-
             </select>
           </label>
         </form>
@@ -668,26 +637,20 @@ function AdminProducts() {
                   const activeVariants = (product.variants || []).filter(
                     (variant) => variant.active !== false,
                   );
-                  const price = hasVariants
-                    ? activeVariants[0]?.price
-                    : product.price;
+                  const price = hasVariants ? activeVariants[0]?.price : product.price;
                   const stock = hasVariants
                     ? product.variants.reduce(
-                      (total, variant) =>
-                        total + (variant.stockQuantity || 0),
-                      0,
-                    )
+                        (total, variant) => total + (variant.stockQuantity || 0),
+                        0,
+                      )
                     : product.stockQuantity;
                   const isStoreVisible =
-                    product.active &&
-                    (!hasVariants || activeVariants.length > 0);
+                    product.active && (!hasVariants || activeVariants.length > 0);
                   return (
                     <tr key={product._id}>
                       <td>
                         <div className="products-name-cell">
-                          {product.images?.[0] && (
-                            <img src={product.images[0]} alt="" />
-                          )}
+                          {product.images?.[0] && <img src={product.images[0]} alt="" />}
                           <div>
                             <strong>{product.name}</strong>
                             <span>{product.sku || product.slug}</span>
@@ -695,11 +658,7 @@ function AdminProducts() {
                         </div>
                       </td>
                       <td>{product.categoryId?.name || "—"}</td>
-                      <td>
-                        {price == null
-                          ? "—"
-                          : `₹${Number(price).toLocaleString("en-IN")}`}
-                      </td>
+                      <td>{price == null ? "—" : `₹${Number(price).toLocaleString("en-IN")}`}</td>
                       <td>{stock ?? 0}</td>
                       <td>
                         <span
@@ -713,16 +672,10 @@ function AdminProducts() {
                         </span>
                       </td>
                       <td className="products-actions">
-                        <button
-                          type="button"
-                          onClick={() => openEditModal(product)}
-                        >
+                        <button type="button" onClick={() => openEditModal(product)}>
                           Edit
                         </button>
-                        <button
-                          type="button"
-                          onClick={() => toggleListing(product)}
-                        >
+                        <button type="button" onClick={() => toggleListing(product)}>
                           {product.active ? "Unlist" : "List"}
                         </button>
                         <button
@@ -783,29 +736,27 @@ function AdminProducts() {
         </footer>
       </div>
 
-      {
-        modalOpen && (
-          <ProductFormModal
-            editingProduct={editingProduct}
-            form={form}
-            setForm={setForm}
-            categories={categories}
-            selectedImageFiles={selectedImageFiles}
-            setSelectedImageFiles={setSelectedImageFiles}
-            saving={saving}
-            error={error}
-            fieldErrors={fieldErrors}
-            onFieldChange={updateFormField}
-            onSubmit={handleSubmit}
-            onClose={closeModal}
-            onSelectProductImages={selectProductImages}
-            onAddVariant={addVariant}
-            onUpdateVariant={updateVariant}
-            onRemoveVariant={removeVariant}
-            onSelectVariantImages={selectVariantImages}
-          />
-        )
-      }
+      {modalOpen && (
+        <ProductFormModal
+          editingProduct={editingProduct}
+          form={form}
+          setForm={setForm}
+          categories={categories}
+          selectedImageFiles={selectedImageFiles}
+          setSelectedImageFiles={setSelectedImageFiles}
+          saving={saving}
+          error={error}
+          fieldErrors={fieldErrors}
+          onFieldChange={updateFormField}
+          onSubmit={handleSubmit}
+          onClose={closeModal}
+          onSelectProductImages={selectProductImages}
+          onAddVariant={addVariant}
+          onUpdateVariant={updateVariant}
+          onRemoveVariant={removeVariant}
+          onSelectVariantImages={selectVariantImages}
+        />
+      )}
 
       <ProductCropModal
         activeCropItem={activeCropItem}
@@ -828,7 +779,7 @@ function AdminProducts() {
         onCancel={() => setProductToDelete(null)}
         onConfirm={handlePermanentDelete}
       />
-    </section >
+    </section>
   );
 }
 

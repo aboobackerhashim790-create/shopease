@@ -21,10 +21,7 @@ function ForgotPassword() {
 
   useEffect(() => {
     if (remainingSeconds <= 0) return;
-    const timer = window.setTimeout(
-      () => setRemainingSeconds((seconds) => seconds - 1),
-      1000,
-    );
+    const timer = window.setTimeout(() => setRemainingSeconds((seconds) => seconds - 1), 1000);
     return () => window.clearTimeout(timer);
   }, [remainingSeconds]);
 
@@ -38,10 +35,8 @@ function ForgotPassword() {
     try {
       const response = await API.post("/auth/forgot-password", { email });
       const result = response.data;
-      if (typeof result.remainingResends === "number")
-        setRemainingResends(result.remainingResends);
-      if (result.retryAfterSeconds)
-        setRemainingSeconds(result.retryAfterSeconds);
+      if (typeof result.remainingResends === "number") setRemainingResends(result.remainingResends);
+      if (result.retryAfterSeconds) setRemainingSeconds(result.retryAfterSeconds);
       if (!isSuccess(response))
         throw new Error(result.message || "Could not request a reset code.");
       setCodeSent(true);
@@ -74,7 +69,9 @@ function ForgotPassword() {
       !/\d/.test(newPassword) ||
       !/[!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?`~]/.test(newPassword)
     ) {
-      setError("Password must be at least 8 characters and include at least one letter, one number, and one punctuation/symbol.");
+      setError(
+        "Password must be at least 8 characters and include at least one letter, one number, and one punctuation/symbol.",
+      );
       setBusy(false);
       return;
     }
@@ -85,8 +82,7 @@ function ForgotPassword() {
         newPassword,
       });
       const result = response.data;
-      if (!isSuccess(response))
-        throw new Error(result.message || "Could not reset your password.");
+      if (!isSuccess(response)) throw new Error(result.message || "Could not reset your password.");
       navigate("/auth/login", { replace: true, state: { message: result.message } });
     } catch (requestError) {
       setError(requestError.message);
@@ -141,13 +137,7 @@ function ForgotPassword() {
         ) : (
           <form onSubmit={submitReset}>
             <label htmlFor="reset-email-readonly">Email address</label>
-            <input
-              id="reset-email-readonly"
-              type="email"
-              value={email}
-              readOnly
-              required
-            />
+            <input id="reset-email-readonly" type="email" value={email} readOnly required />
             <label htmlFor="reset-code">6-digit code</label>
             <input
               id="reset-code"
@@ -155,9 +145,7 @@ function ForgotPassword() {
               autoComplete="one-time-code"
               maxLength={6}
               value={code}
-              onChange={(event) =>
-                setCode(event.target.value.replace(/\D/g, "").slice(0, 6))
-              }
+              onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
               required
             />
             <label htmlFor="reset-new-password">New password</label>
@@ -171,8 +159,16 @@ function ForgotPassword() {
                 onChange={(event) => setNewPassword(event.target.value)}
                 required
               />
-              <button type="button" aria-label={showNewPassword ? "Hide password" : "Show password"} onClick={() => setShowNewPassword((visible) => !visible)}>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />{showNewPassword && <path d="m3 3 18 18" />}</svg>
+              <button
+                type="button"
+                aria-label={showNewPassword ? "Hide password" : "Show password"}
+                onClick={() => setShowNewPassword((visible) => !visible)}
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+                  <circle cx="12" cy="12" r="3" />
+                  {showNewPassword && <path d="m3 3 18 18" />}
+                </svg>
               </button>
             </div>
             <label htmlFor="reset-confirm-password">Confirm new password</label>
@@ -186,8 +182,16 @@ function ForgotPassword() {
                 onChange={(event) => setConfirmPassword(event.target.value)}
                 required
               />
-              <button type="button" aria-label={showConfirmPassword ? "Hide password" : "Show password"} onClick={() => setShowConfirmPassword((visible) => !visible)}>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />{showConfirmPassword && <path d="m3 3 18 18" />}</svg>
+              <button
+                type="button"
+                aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+                onClick={() => setShowConfirmPassword((visible) => !visible)}
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+                  <circle cx="12" cy="12" r="3" />
+                  {showConfirmPassword && <path d="m3 3 18 18" />}
+                </svg>
               </button>
             </div>
             <button type="submit" disabled={busy}>
@@ -209,8 +213,7 @@ function ForgotPassword() {
             </button>
             {remainingResends <= 0 && (
               <p className="forgot-description">
-                You’ve used all 3 resend attempts. Please try again after this
-                code expires.
+                You’ve used all 3 resend attempts. Please try again after this code expires.
               </p>
             )}
           </form>

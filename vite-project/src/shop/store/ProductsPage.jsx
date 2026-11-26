@@ -15,11 +15,7 @@ const EMPTY_FILTERS = {
 
 function ProductsPage() {
   const navigate = useNavigate();
-  const {
-    runProtectedAction,
-    refreshShopCounts,
-    wishlistIds = [],
-  } = useOutletContext();
+  const { runProtectedAction, refreshShopCounts, wishlistIds = [] } = useOutletContext();
   const [searchParams, setSearchParams] = useSearchParams();
   const [filters, setFilters] = useState(() => ({
     ...EMPTY_FILTERS,
@@ -49,21 +45,13 @@ function ProductsPage() {
     const search = searchParams.get("search") || "";
     const categoryId = searchParams.get("categoryId") || "";
     setFilters((current) => {
-      if (
-        current.search === search &&
-        current.categoryId === categoryId &&
-        current.page === 1
-      ) {
+      if (current.search === search && current.categoryId === categoryId && current.page === 1) {
         return current;
       }
       return { ...current, search, categoryId, page: 1 };
     });
     setAppliedFilters((current) => {
-      if (
-        current.search === search &&
-        current.categoryId === categoryId &&
-        current.page === 1
-      ) {
+      if (current.search === search && current.categoryId === categoryId && current.page === 1) {
         return current;
       }
       return { ...current, search, categoryId, page: 1 };
@@ -74,8 +62,7 @@ function ProductsPage() {
     let active = true;
     API.get("/store/categories")
       .then((response) => {
-        if (active && isSuccess(response))
-          setCategories(response.data.categories || []);
+        if (active && isSuccess(response)) setCategories(response.data.categories || []);
       })
       .catch(() => {});
     return () => {
@@ -112,8 +99,7 @@ function ProductsPage() {
         );
       })
       .catch((requestError) => {
-        if (active)
-          setError(requestError.message || "Could not load products.");
+        if (active) setError(requestError.message || "Could not load products.");
       })
       .finally(() => {
         if (active) setLoading(false);
@@ -161,9 +147,7 @@ function ProductsPage() {
             quantity: 1,
           });
           if (!isSuccess(response))
-            throw new Error(
-              response.data.message || "Could not add this item.",
-            );
+            throw new Error(response.data.message || "Could not add this item.");
           await refreshShopCounts();
           setNotice(`${product.name} added to your cart.`);
         } catch (requestError) {
@@ -178,9 +162,11 @@ function ProductsPage() {
   }
 
   function buyNow(product, variantId) {
-    runProtectedAction(() => navigate("/home/checkout", {
-      state: { buyNow: { productId: product._id, variantId: variantId || null, quantity: 1 } },
-    }));
+    runProtectedAction(() =>
+      navigate("/home/checkout", {
+        state: { buyNow: { productId: product._id, variantId: variantId || null, quantity: 1 } },
+      }),
+    );
   }
 
   function toggleWishlist(product) {
@@ -193,9 +179,7 @@ function ProductsPage() {
             ? await API.delete(`/store/wishlist/items/${product._id}`)
             : await API.post(`/store/wishlist/items/${product._id}`);
           if (!isSuccess(response))
-            throw new Error(
-              response.data.message || "Could not update your wishlist.",
-            );
+            throw new Error(response.data.message || "Could not update your wishlist.");
           await refreshShopCounts();
         } catch (requestError) {
           setNotice(
@@ -303,22 +287,16 @@ function ProductsPage() {
         </p>
       )}
       {!loading && !error && (
-        <p className="store-result-line">
-          {pagination.totalProducts} products found
-        </p>
+        <p className="store-result-line">{pagination.totalProducts} products found</p>
       )}
       {error && (
         <div className="store-error" role="alert">
           {error}
         </div>
       )}
-      {loading ? (
-        <div className="store-panel store-empty">Loading products…</div>
-      ) : null}
+      {loading ? <div className="store-panel store-empty">Loading products…</div> : null}
       {!loading && !error && products.length === 0 && (
-        <div className="store-panel store-empty">
-          No available products match these filters.
-        </div>
+        <div className="store-panel store-empty">No available products match these filters.</div>
       )}
       {!loading && products.length > 0 && (
         <>

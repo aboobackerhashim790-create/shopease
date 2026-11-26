@@ -1,10 +1,5 @@
 import { useCallback, useEffect, useState } from "react";
-import {
-  Link,
-  useLocation,
-  useNavigate,
-  useOutletContext,
-} from "react-router-dom";
+import { Link, useLocation, useNavigate, useOutletContext } from "react-router-dom";
 import API, { isSuccess } from "../../api/client.js";
 import { formatPrice } from "./StoreProductCard.jsx";
 import "./StorePages.css";
@@ -27,8 +22,7 @@ function CartPage() {
       navigate("/auth/login", { state: { from: location }, replace: true });
       return;
     }
-    if (!isSuccess(response))
-      throw new Error(response.data.message || "Could not load your cart.");
+    if (!isSuccess(response)) throw new Error(response.data.message || "Could not load your cart.");
     setCart(response.data.cart);
     setMaxCartItems(response.data.maxCartItems || 9);
   }, [location, navigate]);
@@ -62,17 +56,15 @@ function CartPage() {
           ? await API.delete(`/store/cart/items/${item._id}`)
           : await API.patch(`/store/cart/items/${item._id}`, { quantity });
       if (!isSuccess(response))
-        throw new Error(
-          response.data.message || "Could not update this cart item.",
-        );
+        throw new Error(response.data.message || "Could not update this cart item.");
       setCart(response.data.cart);
       setMaxCartItems(response.data.maxCartItems || maxCartItems);
       await refreshShopCounts();
     } catch (requestError) {
       setError(
         requestError.response?.data?.message ||
-        requestError.message ||
-        "Could not update your cart.",
+          requestError.message ||
+          "Could not update your cart.",
       );
     } finally {
       setBusyId("");
@@ -106,8 +98,8 @@ function CartPage() {
 
       setError(
         requestError.response?.data?.message ||
-        requestError.message ||
-        "Could not verify your cart.",
+          requestError.message ||
+          "Could not verify your cart.",
       );
     } finally {
       setCheckingOut(false);
@@ -130,9 +122,7 @@ function CartPage() {
         <div>
           <span className="store-eyebrow">YOUR SHOPPING BAG</span>
           <h1>Your cart</h1>
-          <p className="store-muted">
-            Review your items and quantities before checkout.
-          </p>
+          <p className="store-muted">Review your items and quantities before checkout.</p>
         </div>
         <Link className="store-button" to="/home/products">
           ← Continue shopping
@@ -159,10 +149,7 @@ function CartPage() {
           <p className="store-muted">
             Explore the catalog and add a product when you find the right one.
           </p>
-          <Link
-            className="store-button store-button--primary"
-            to="/home/products"
-          >
+          <Link className="store-button store-button--primary" to="/home/products">
             Browse products
           </Link>
           <button
@@ -187,8 +174,8 @@ function CartPage() {
               <div className="store-cart-warning" role="alert">
                 <strong>Some items need attention</strong>
                 <span>
-                  Stock may have changed. Reduce the quantity or remove
-                  unavailable items to continue.
+                  Stock may have changed. Reduce the quantity or remove unavailable items to
+                  continue.
                 </span>
               </div>
             )}
@@ -196,8 +183,8 @@ function CartPage() {
               <div className="store-cart-warning" role="alert">
                 <strong>Your cart is over the {maxCartItems}-item limit</strong>
                 <span>
-                  Reduce quantities or remove items until the cart contains no
-                  more than {maxCartItems} units.
+                  Reduce quantities or remove items until the cart contains no more than{" "}
+                  {maxCartItems} units.
                 </span>
               </div>
             )}
@@ -232,39 +219,27 @@ function CartPage() {
                           {item.product.name}
                         </Link>
                       ) : (
-                        <strong className="store-cart-item__title">
-                          Unavailable product
-                        </strong>
+                        <strong className="store-cart-item__title">Unavailable product</strong>
                       )}
                       {item.variant && (
                         <p className="store-cart-item__variant">
-                          {[
-                            item.variant.options?.color,
-                            item.variant.options?.storage,
-                          ]
+                          {[item.variant.options?.color, item.variant.options?.storage]
                             .filter(Boolean)
                             .join(" · ") || item.variant.sku}
                         </p>
                       )}
                       {item.available ? (
-                        <p className="store-cart-stock">
-                          {item.availableStock} available
-                        </p>
+                        <p className="store-cart-stock">{item.availableStock} available</p>
                       ) : (
                         <p className="store-unavailable">{item.message}</p>
                       )}
-                      <div
-                        className="store-cart-item__controls"
-                        aria-label="Quantity controls"
-                      >
+                      <div className="store-cart-item__controls" aria-label="Quantity controls">
                         <div className="store-quantity-stepper">
                           <button
                             type="button"
                             aria-label={`Decrease ${item.product?.name || "item"} quantity`}
                             disabled={busyId === item._id}
-                            onClick={() =>
-                              changeQuantity(item, item.quantity - 1)
-                            }
+                            onClick={() => changeQuantity(item, item.quantity - 1)}
                           >
                             −
                           </button>
@@ -273,9 +248,7 @@ function CartPage() {
                             type="button"
                             aria-label={`Increase ${item.product?.name || "item"} quantity`}
                             disabled={busyId === item._id || !canIncrease}
-                            onClick={() =>
-                              changeQuantity(item, item.quantity + 1)
-                            }
+                            onClick={() => changeQuantity(item, item.quantity + 1)}
                           >
                             ＋
                           </button>
@@ -294,12 +267,8 @@ function CartPage() {
                       </div>
                     </div>
                     <div className="store-cart-item__pricing">
-                      <strong>
-                        {item.available ? formatPrice(item.itemTotal) : "—"}
-                      </strong>
-                      {item.available && (
-                        <span>{formatPrice(item.unitPrice)} each</span>
-                      )}
+                      <strong>{item.available ? formatPrice(item.itemTotal) : "—"}</strong>
+                      {item.available && <span>{formatPrice(item.unitPrice)} each</span>}
                     </div>
                   </article>
                 );

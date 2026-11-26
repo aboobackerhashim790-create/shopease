@@ -102,9 +102,7 @@ function CategoryManagementPage() {
         });
 
         if (!isSuccess(response)) {
-          throw new Error(
-            response.data.message || "Could not load categories.",
-          );
+          throw new Error(response.data.message || "Could not load categories.");
         }
 
         if (active) {
@@ -155,15 +153,11 @@ function CategoryManagementPage() {
       });
 
       if (!isSuccess(response)) {
-        throw new Error(
-          response.data.message || "Could not load parent categories.",
-        );
+        throw new Error(response.data.message || "Could not load parent categories.");
       }
 
       setParentCategories(
-        response.data.categories.filter(
-          (parentCategory) => parentCategory._id !== category?._id,
-        ),
+        response.data.categories.filter((parentCategory) => parentCategory._id !== category?._id),
       );
     } catch (requestError) {
       setError(requestError.message || "Could not load parent categories.");
@@ -175,19 +169,14 @@ function CategoryManagementPage() {
       const response = await API.delete(`/admin/category/${categoryId}`);
 
       if (!isSuccess(response)) {
-        throw new Error(
-          response.data.message || "Could not delete the category.",
-        );
+        throw new Error(response.data.message || "Could not delete the category.");
       }
 
       setCategories((currentCategories) =>
         currentCategories.filter((category) => category._id !== categoryId),
       );
       setPagination((currentPagination) => {
-        const totalCategories = Math.max(
-          currentPagination.totalCategories - 1,
-          0,
-        );
+        const totalCategories = Math.max(currentPagination.totalCategories - 1, 0);
         return {
           ...currentPagination,
           totalCategories,
@@ -205,10 +194,9 @@ function CategoryManagementPage() {
   async function handleListingChange(category) {
     setError("");
     try {
-      const response = await API.patch(
-        `/admin/category/${category._id}/listing`,
-        { active: !category.active },
-      );
+      const response = await API.patch(`/admin/category/${category._id}/listing`, {
+        active: !category.active,
+      });
 
       if (!isSuccess(response)) {
         throw new Error(response.data.message || "Could not update category status.");
@@ -247,15 +235,14 @@ function CategoryManagementPage() {
 
       const response = editingCategory
         ? await API.patch("/admin/category", {
-          _id: editingCategory._id,
-          ...categoryData,
-        })
+            _id: editingCategory._id,
+            ...categoryData,
+          })
         : await API.post("/admin/category", categoryData);
 
       if (!isSuccess(response)) {
         throw new Error(
-          response.data.message ||
-          `Could not ${editingCategory ? "update" : "create"} category.`,
+          response.data.message || `Could not ${editingCategory ? "update" : "create"} category.`,
         );
       }
 
@@ -286,7 +273,8 @@ function CategoryManagementPage() {
         parentCategoryId: "",
       });
     } catch (requestError) {
-      const message = requestError.response?.data?.message || requestError.message || "Could not save category.";
+      const message =
+        requestError.response?.data?.message || requestError.message || "Could not save category.";
       const lowerMessage = message.toLowerCase();
       if (lowerMessage.includes("name") && lowerMessage.includes("slug")) {
         setFormErrors({ name: message, slug: message });
@@ -311,9 +299,8 @@ function CategoryManagementPage() {
           <div className="delete-modal">
             <h2>Delete category?</h2>
             <p>
-              This permanently deletes <strong>{categoryToDelete.name}</strong>.
-              This cannot be undone. Categories that still contain products or
-              child categories cannot be deleted.
+              This permanently deletes <strong>{categoryToDelete.name}</strong>. This cannot be
+              undone. Categories that still contain products or child categories cannot be deleted.
             </p>
 
             <button type="button" onClick={() => setCategoryToDelete(null)}>
@@ -346,13 +333,20 @@ function CategoryManagementPage() {
                   const value = event.target.value;
                   setForm((current) => ({ ...current, name: value }));
                   setTouchedFields((current) => ({ ...current, name: true }));
-                  setFormErrors((current) => ({ ...current, name: validateCategoryField("name", value) }));
+                  setFormErrors((current) => ({
+                    ...current,
+                    name: validateCategoryField("name", value),
+                  }));
                 }}
                 aria-invalid={Boolean(formErrors.name)}
-                className={touchedFields.name ? (formErrors.name ? "field-invalid" : "field-valid") : ""}
+                className={
+                  touchedFields.name ? (formErrors.name ? "field-invalid" : "field-valid") : ""
+                }
               />
               {touchedFields.name && (
-                <span className={`field-feedback ${formErrors.name ? "field-feedback--error" : "field-feedback--success"}`}>
+                <span
+                  className={`field-feedback ${formErrors.name ? "field-feedback--error" : "field-feedback--success"}`}
+                >
                   {formErrors.name || "Looks good."}
                 </span>
               )}
@@ -366,13 +360,20 @@ function CategoryManagementPage() {
                   const value = event.target.value;
                   setForm((current) => ({ ...current, slug: value }));
                   setTouchedFields((current) => ({ ...current, slug: true }));
-                  setFormErrors((current) => ({ ...current, slug: validateCategoryField("slug", value) }));
+                  setFormErrors((current) => ({
+                    ...current,
+                    slug: validateCategoryField("slug", value),
+                  }));
                 }}
                 aria-invalid={Boolean(formErrors.slug)}
-                className={touchedFields.slug ? (formErrors.slug ? "field-invalid" : "field-valid") : ""}
+                className={
+                  touchedFields.slug ? (formErrors.slug ? "field-invalid" : "field-valid") : ""
+                }
               />
               {touchedFields.slug && (
-                <span className={`field-feedback ${formErrors.slug ? "field-feedback--error" : "field-feedback--success"}`}>
+                <span
+                  className={`field-feedback ${formErrors.slug ? "field-feedback--error" : "field-feedback--success"}`}
+                >
                   {formErrors.slug || "Looks good."}
                 </span>
               )}
@@ -387,13 +388,24 @@ function CategoryManagementPage() {
                   const value = event.target.value;
                   setForm((current) => ({ ...current, sortOrder: value }));
                   setTouchedFields((current) => ({ ...current, sortOrder: true }));
-                  setFormErrors((current) => ({ ...current, sortOrder: validateCategoryField("sortOrder", value) }));
+                  setFormErrors((current) => ({
+                    ...current,
+                    sortOrder: validateCategoryField("sortOrder", value),
+                  }));
                 }}
                 aria-invalid={Boolean(formErrors.sortOrder)}
-                className={touchedFields.sortOrder ? (formErrors.sortOrder ? "field-invalid" : "field-valid") : ""}
+                className={
+                  touchedFields.sortOrder
+                    ? formErrors.sortOrder
+                      ? "field-invalid"
+                      : "field-valid"
+                    : ""
+                }
               />
               {touchedFields.sortOrder && (
-                <span className={`field-feedback ${formErrors.sortOrder ? "field-feedback--error" : "field-feedback--success"}`}>
+                <span
+                  className={`field-feedback ${formErrors.sortOrder ? "field-feedback--error" : "field-feedback--success"}`}
+                >
                   {formErrors.sortOrder || "Looks good."}
                 </span>
               )}
@@ -403,9 +415,7 @@ function CategoryManagementPage() {
               Parent category
               <select
                 value={form.parentCategoryId}
-                onChange={(event) =>
-                  setForm({ ...form, parentCategoryId: event.target.value })
-                }
+                onChange={(event) => setForm({ ...form, parentCategoryId: event.target.value })}
               >
                 <option value="">No parent (top-level category)</option>
                 {parentCategories.map((parentCategory) => (
@@ -435,11 +445,7 @@ function CategoryManagementPage() {
                 Cancel
               </button>
               <button type="submit" disabled={saving}>
-                {saving
-                  ? "Saving…"
-                  : editingCategory
-                    ? "Save changes"
-                    : "Create"}
+                {saving ? "Saving…" : editingCategory ? "Save changes" : "Create"}
               </button>
             </div>
           </form>
@@ -451,9 +457,7 @@ function CategoryManagementPage() {
           <div>
             <p className="category-page__eyebrow">ADMINISTRATION</p>
             <h1>Category management</h1>
-            <p className="category-page__description">
-              View and manage your store categories.
-            </p>
+            <p className="category-page__description">View and manage your store categories.</p>
           </div>
           <button type="button" onClick={() => openCategoryModal()}>
             Create category
@@ -523,16 +527,13 @@ function CategoryManagementPage() {
               >
                 <option value="all">All categories</option>
                 <option value="listed">Listed</option>
-                <option value="unlisted" >Unlisted</option>
+                <option value="unlisted">Unlisted</option>
               </select>
             </label>
           </form>
 
           {error && (
-            <p
-              className="category-message category-message--error"
-              role="alert"
-            >
+            <p className="category-message category-message--error" role="alert">
               {error}
             </p>
           )}
@@ -570,10 +571,11 @@ function CategoryManagementPage() {
                       </td>
                       <td>
                         <span
-                          className={`category-status ${category.active
-                            ? "category-status--active"
-                            : "category-status--inactive"
-                            }`}
+                          className={`category-status ${
+                            category.active
+                              ? "category-status--active"
+                              : "category-status--inactive"
+                          }`}
                         >
                           {category.active ? "Listed" : "Unlisted"}
                         </span>
@@ -595,10 +597,7 @@ function CategoryManagementPage() {
                           Delete
                         </button>
 
-                        <button
-                          type="button"
-                          onClick={() => openCategoryModal(category)}
-                        >
+                        <button type="button" onClick={() => openCategoryModal(category)}>
                           Edit
                         </button>
                       </td>

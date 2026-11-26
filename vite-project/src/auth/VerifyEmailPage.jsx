@@ -53,9 +53,7 @@ function VerifyEmail() {
     } catch (error) {
       console.error("Resend code error:", error);
       setMessage(
-        error.response?.data?.message ||
-          error.message ||
-          "Could not resend the verification code.",
+        error.response?.data?.message || error.message || "Could not resend the verification code.",
       );
     } finally {
       setResending(false);
@@ -137,10 +135,7 @@ function VerifyEmail() {
         )}
 
         <form onSubmit={handleSubmit}>
-          <div
-            className="otp-boxes"
-            onClick={() => codeInputRef.current?.focus()}
-          >
+          <div className="otp-boxes" onClick={() => codeInputRef.current?.focus()}>
             {Array.from({ length: 6 }, (_, index) => (
               <span
                 className={`otp-box ${code.length === index ? "otp-box-current" : ""}`}
@@ -159,9 +154,7 @@ function VerifyEmail() {
               autoComplete="one-time-code"
               maxLength={6}
               value={code}
-              onChange={(event) =>
-                setCode(event.target.value.replace(/\D/g, "").slice(0, 6))
-              }
+              onChange={(event) => setCode(event.target.value.replace(/\D/g, "").slice(0, 6))}
               required
             />
           </div>
@@ -170,9 +163,7 @@ function VerifyEmail() {
             className="resend-button"
             type="button"
             onClick={handleResendCode}
-            disabled={
-              remainingSeconds > 0 || remainingResends <= 0 || resending
-            }
+            disabled={remainingSeconds > 0 || remainingResends <= 0 || resending}
           >
             {resending
               ? "Sending code…"
@@ -183,11 +174,7 @@ function VerifyEmail() {
                   : `Resend code (${remainingResends} left)`}
           </button>
 
-          <button
-            className="verify-submit-button"
-            type="submit"
-            disabled={loading}
-          >
+          <button className="verify-submit-button" type="submit" disabled={loading}>
             {loading ? "Verifying…" : "Verify & Continue"}
             {!loading && <span aria-hidden="true"> →</span>}
           </button>

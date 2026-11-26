@@ -144,8 +144,18 @@ function AccountSettingsPage() {
                 onChange={updateField}
                 required
               />
-              <button type="button" aria-label={visiblePasswords.current ? "Hide password" : "Show password"} onClick={() => setVisiblePasswords((current) => ({ ...current, current: !current.current }))}>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />{visiblePasswords.current && <path d="m3 3 18 18" />}</svg>
+              <button
+                type="button"
+                aria-label={visiblePasswords.current ? "Hide password" : "Show password"}
+                onClick={() =>
+                  setVisiblePasswords((current) => ({ ...current, current: !current.current }))
+                }
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+                  <circle cx="12" cy="12" r="3" />
+                  {visiblePasswords.current && <path d="m3 3 18 18" />}
+                </svg>
               </button>
             </div>
           </label>
@@ -161,8 +171,18 @@ function AccountSettingsPage() {
                 onChange={updateField}
                 required
               />
-              <button type="button" aria-label={visiblePasswords.new ? "Hide password" : "Show password"} onClick={() => setVisiblePasswords((current) => ({ ...current, new: !current.new }))}>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />{visiblePasswords.new && <path d="m3 3 18 18" />}</svg>
+              <button
+                type="button"
+                aria-label={visiblePasswords.new ? "Hide password" : "Show password"}
+                onClick={() =>
+                  setVisiblePasswords((current) => ({ ...current, new: !current.new }))
+                }
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+                  <circle cx="12" cy="12" r="3" />
+                  {visiblePasswords.new && <path d="m3 3 18 18" />}
+                </svg>
               </button>
             </div>
           </label>
@@ -178,31 +198,34 @@ function AccountSettingsPage() {
                 onChange={updateField}
                 required
               />
-              <button type="button" aria-label={visiblePasswords.confirm ? "Hide password" : "Show password"} onClick={() => setVisiblePasswords((current) => ({ ...current, confirm: !current.confirm }))}>
-                <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />{visiblePasswords.confirm && <path d="m3 3 18 18" />}</svg>
+              <button
+                type="button"
+                aria-label={visiblePasswords.confirm ? "Hide password" : "Show password"}
+                onClick={() =>
+                  setVisiblePasswords((current) => ({ ...current, confirm: !current.confirm }))
+                }
+              >
+                <svg viewBox="0 0 24 24" aria-hidden="true">
+                  <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+                  <circle cx="12" cy="12" r="3" />
+                  {visiblePasswords.confirm && <path d="m3 3 18 18" />}
+                </svg>
               </button>
             </div>
           </label>
-          <button
-            className="account-button account-button-primary"
-            type="submit"
-            disabled={saving}
-          >
+          <button className="account-button account-button-primary" type="submit" disabled={saving}>
             {saving ? "Updating…" : "Update password"}
           </button>
         </form>
         <p className="settings-forgot-link">
-          Forgot your current password?{" "}
-          <Link to="/auth/forgot-password">Reset it by email</Link>
+          Forgot your current password? <Link to="/auth/forgot-password">Reset it by email</Link>
         </p>
       </section>
       <section className="account-panel settings-password-panel">
         <div className="account-panel-heading">
           <div>
             <h2>Change email address</h2>
-            <p>
-              We’ll send a 6-digit code to the new address to verify you own it.
-            </p>
+            <p>We’ll send a 6-digit code to the new address to verify you own it.</p>
           </div>
           <span aria-hidden="true">✉</span>
         </div>
@@ -234,20 +257,14 @@ function AccountSettingsPage() {
                   maxLength={6}
                   value={emailCode}
                   onChange={(event) =>
-                    setEmailCode(
-                      event.target.value.replace(/\D/g, "").slice(0, 6),
-                    )
+                    setEmailCode(event.target.value.replace(/\D/g, "").slice(0, 6))
                   }
                   required
                 />
               </label>
             </>
           )}
-          <button
-            className="account-button account-button-primary"
-            type="submit"
-            disabled={saving}
-          >
+          <button className="account-button account-button-primary" type="submit" disabled={saving}>
             {saving
               ? "Please wait…"
               : emailCodeSent

@@ -33,13 +33,17 @@ function UserManagementPage() {
   const [exportingPdf, setExportingPdf] = useState(false);
 
   function escapeHtml(value = "") {
-    return String(value).replace(/[&<>"']/g, (character) => ({
-      "&": "&amp;",
-      "<": "&lt;",
-      ">": "&gt;",
-      '"': "&quot;",
-      "'": "&#39;",
-    })[character]);
+    return String(value).replace(
+      /[&<>"']/g,
+      (character) =>
+        ({
+          "&": "&amp;",
+          "<": "&lt;",
+          ">": "&gt;",
+          '"': "&quot;",
+          "'": "&#39;",
+        })[character],
+    );
   }
 
   async function handleDownloadPdf() {
@@ -69,7 +73,9 @@ function UserManagementPage() {
         return;
       }
 
-      const tableRows = exportList.map((customer, index) => `
+      const tableRows = exportList
+        .map(
+          (customer, index) => `
         <tr>
           <td style="text-align: center; color: #64748b; font-weight: 600;">${index + 1}</td>
           <td style="font-weight: 600; color: #0f172a;">${escapeHtml(customer.fullName || "—")}</td>
@@ -82,7 +88,9 @@ function UserManagementPage() {
             </span>
           </td>
         </tr>
-      `).join("");
+      `,
+        )
+        .join("");
 
       const totalRevenue = exportList.reduce((sum, u) => sum + (Number(u.totalSpent) || 0), 0);
       const activeCount = exportList.filter((u) => !u.isBlocked).length;
@@ -307,11 +315,9 @@ function UserManagementPage() {
           search,
           sort,
           status,
-
         });
         if (fromDate) params.set("fromDate", fromDate);
         if (toDate) params.set("toDate", toDate);
-
 
         const response = await API.get(`/admin/users?${params}`);
 
@@ -421,9 +427,7 @@ function UserManagementPage() {
         <div>
           <p className="customers-eyebrow">ADMINISTRATION</p>
           <h1>User Management</h1>
-          <p className="customers-subtitle">
-            Search, review, and manage registered customers.
-          </p>
+          <p className="customers-subtitle">Search, review, and manage registered customers.</p>
         </div>
 
         <div className="customers-heading-actions">
@@ -438,10 +442,20 @@ function UserManagementPage() {
               <span>Generating PDF…</span>
             ) : (
               <>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
-                  <polyline points="7 10 12 15 17 10"/>
-                  <line x1="12" y1="15" x2="12" y2="3"/>
+                <svg
+                  width="16"
+                  height="16"
+                  viewBox="0 0 24 24"
+                  fill="none"
+                  stroke="currentColor"
+                  strokeWidth="2.2"
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  aria-hidden="true"
+                >
+                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4" />
+                  <polyline points="7 10 12 15 17 10" />
+                  <line x1="12" y1="15" x2="12" y2="3" />
                 </svg>
                 <span>Download PDF</span>
               </>
@@ -468,11 +482,7 @@ function UserManagementPage() {
             Search
           </button>
 
-          <button
-            className="button button-secondary"
-            type="button"
-            onClick={clearSearch}
-          >
+          <button className="button button-secondary" type="button" onClick={clearSearch}>
             Clear
           </button>
           <label className="status-control">
@@ -502,16 +512,22 @@ function UserManagementPage() {
               <option value="oldest">Oldest registered</option>
             </select>
           </label>
-          <input type="date" aria-label="Registered from date"
+          <input
+            type="date"
+            aria-label="Registered from date"
             value={fromDate}
             onChange={(event) => {
               setFromDate(event.target.value);
-            }} />
-          <input type="date" aria-label="Registered to date"
+            }}
+          />
+          <input
+            type="date"
+            aria-label="Registered to date"
             value={toDate}
             onChange={(event) => {
               setToDate(event.target.value);
-            }} />
+            }}
+          />
         </form>
 
         {message && (
@@ -542,29 +558,23 @@ function UserManagementPage() {
                 {users.map((user) => (
                   <tr key={user._id}>
                     <td className="customer-name">
-                      <Link to={`/admin/users/${user._id}`}>
-                        {user.fullName}
-                      </Link>
+                      <Link to={`/admin/users/${user._id}`}>{user.fullName}</Link>
                     </td>
                     <td>{user.email}</td>
-                    <td>
-                      {user.createdAt
-                        ? new Date(user.createdAt).toLocaleDateString()
-                        : "—"}
-                    </td>
+                    <td>{user.createdAt ? new Date(user.createdAt).toLocaleDateString() : "—"}</td>
                     <td>₹{(user.totalSpent || 0).toLocaleString("en-IN")}</td>
                     <td>
                       <span
-                        className={`status-badge ${user.isBlocked ? "status-blocked" : "status-active"
-                          }`}
+                        className={`status-badge ${
+                          user.isBlocked ? "status-blocked" : "status-active"
+                        }`}
                       >
                         {user.isBlocked ? "Blocked" : "Active"}
                       </span>
                     </td>
                     <td>
                       <button
-                        className={`button ${user.isBlocked ? "button-unblock" : "button-block"
-                          }`}
+                        className={`button ${user.isBlocked ? "button-unblock" : "button-block"}`}
                         type="button"
                         onClick={() => toggleBlock(user)}
                         disabled={updatingUserId === user._id}

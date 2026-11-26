@@ -46,15 +46,9 @@ export default function SupportRequestsPage() {
       }
 
       setRequests(response.data.requests || []);
-      setPagination(
-        response.data.pagination || { totalPages: 1, totalRequests: 0 },
-      );
+      setPagination(response.data.pagination || { totalPages: 1, totalRequests: 0 });
     } catch (error) {
-      setMessage(
-        error.response?.data?.message ||
-          error.message ||
-          "Could not load help requests.",
-      );
+      setMessage(error.response?.data?.message || error.message || "Could not load help requests.");
       setIsSuccessMessage(false);
     } finally {
       setLoading(false);
@@ -81,7 +75,12 @@ export default function SupportRequestsPage() {
   function openRequest(request) {
     setSelectedRequest(request);
     setSelectedStatus(request.status);
-    setAdminResponseText(request.adminResponse || (request.status === "Resolved" ? "We have resolved your problem. Thank you for reaching out to ShopEase!" : ""));
+    setAdminResponseText(
+      request.adminResponse ||
+        (request.status === "Resolved"
+          ? "We have resolved your problem. Thank you for reaching out to ShopEase!"
+          : ""),
+    );
     setMessage("");
   }
 
@@ -92,10 +91,10 @@ export default function SupportRequestsPage() {
     setMessage("");
 
     try {
-      const response = await API.patch(
-        `/admin/support/${selectedRequest._id}/status`,
-        { status: selectedStatus, adminResponse: adminResponseText.trim() },
-      );
+      const response = await API.patch(`/admin/support/${selectedRequest._id}/status`, {
+        status: selectedStatus,
+        adminResponse: adminResponseText.trim(),
+      });
 
       if (!isSuccess(response)) {
         throw new Error(response.data?.message || "Could not update request status.");
@@ -107,9 +106,7 @@ export default function SupportRequestsPage() {
       setIsSuccessMessage(true);
     } catch (error) {
       setMessage(
-        error.response?.data?.message ||
-          error.message ||
-          "Could not update request status.",
+        error.response?.data?.message || error.message || "Could not update request status.",
       );
       setIsSuccessMessage(false);
     } finally {
@@ -166,9 +163,7 @@ export default function SupportRequestsPage() {
 
         {message && (
           <p
-            className={`admin-commerce__message${
-              isSuccessMessage ? " is-success" : ""
-            }`}
+            className={`admin-commerce__message${isSuccessMessage ? " is-success" : ""}`}
             role="status"
           >
             {message}
@@ -196,9 +191,7 @@ export default function SupportRequestsPage() {
                   <tr key={request._id}>
                     <td>
                       {request.userId?.fullName || "Customer"}
-                      <small>
-                        {request.userId?.email || "Account unavailable"}
-                      </small>
+                      <small>{request.userId?.email || "Account unavailable"}</small>
                     </td>
                     <td>
                       <strong>{request.subject}</strong>
@@ -206,9 +199,7 @@ export default function SupportRequestsPage() {
                     </td>
                     <td>{formatDate(request.createdAt)}</td>
                     <td>
-                      <span className="admin-commerce__badge">
-                        {request.status}
-                      </span>
+                      <span className="admin-commerce__badge">{request.status}</span>
                     </td>
                     <td>
                       <button type="button" onClick={() => openRequest(request)}>
@@ -224,8 +215,8 @@ export default function SupportRequestsPage() {
 
         <div className="admin-commerce__pagination">
           <span>
-            Page {page} of {Math.max(1, pagination.totalPages)} · {" "}
-            {pagination.totalRequests} requests
+            Page {page} of {Math.max(1, pagination.totalPages)} · {pagination.totalRequests}{" "}
+            requests
           </span>
           <div>
             <button
@@ -271,13 +262,11 @@ export default function SupportRequestsPage() {
             <span>{selectedRequest.category}</span>
             <h2 id="support-dialog-title">{selectedRequest.subject}</h2>
             <p>
-              From {selectedRequest.userId?.fullName || "Customer"} · {" "}
+              From {selectedRequest.userId?.fullName || "Customer"} ·{" "}
               {selectedRequest.userId?.email || "Email unavailable"}
             </p>
             <p>Sent {formatDate(selectedRequest.createdAt)}</p>
-            <div className="admin-support-message">
-              {selectedRequest.message}
-            </div>
+            <div className="admin-support-message">{selectedRequest.message}</div>
 
             <label className="admin-support-status">
               Request status
@@ -287,7 +276,9 @@ export default function SupportRequestsPage() {
                   const newStatus = event.target.value;
                   setSelectedStatus(newStatus);
                   if (newStatus === "Resolved" && !adminResponseText) {
-                    setAdminResponseText("We have reviewed and resolved your problem. Thank you for reaching out to ShopEase support!");
+                    setAdminResponseText(
+                      "We have reviewed and resolved your problem. Thank you for reaching out to ShopEase support!",
+                    );
                   }
                 }}
               >
@@ -299,7 +290,10 @@ export default function SupportRequestsPage() {
               </select>
             </label>
 
-            <label className="admin-support-status" style={{ marginTop: "12px", display: "grid", gap: "6px" }}>
+            <label
+              className="admin-support-status"
+              style={{ marginTop: "12px", display: "grid", gap: "6px" }}
+            >
               <span>Reply to customer</span>
               <textarea
                 rows={4}
@@ -329,7 +323,11 @@ export default function SupportRequestsPage() {
                     color: "#124b3d",
                     cursor: "pointer",
                   }}
-                  onClick={() => setAdminResponseText("We have resolved your problem. Thank you for your patience!")}
+                  onClick={() =>
+                    setAdminResponseText(
+                      "We have resolved your problem. Thank you for your patience!",
+                    )
+                  }
                 >
                   ⚡ Quick: &quot;Resolved your problem&quot;
                 </button>
@@ -344,7 +342,11 @@ export default function SupportRequestsPage() {
                     color: "#2c4c68",
                     cursor: "pointer",
                   }}
-                  onClick={() => setAdminResponseText("We are currently investigating your issue and working on a solution.")}
+                  onClick={() =>
+                    setAdminResponseText(
+                      "We are currently investigating your issue and working on a solution.",
+                    )
+                  }
                 >
                   ⚡ Quick: &quot;Investigating&quot;
                 </button>
@@ -358,7 +360,11 @@ export default function SupportRequestsPage() {
               <button
                 className="admin-commerce__primary"
                 type="button"
-                disabled={saving || (selectedStatus === selectedRequest.status && adminResponseText === (selectedRequest.adminResponse || ""))}
+                disabled={
+                  saving ||
+                  (selectedStatus === selectedRequest.status &&
+                    adminResponseText === (selectedRequest.adminResponse || ""))
+                }
                 onClick={saveStatus}
               >
                 {saving ? "Saving…" : "Save status & reply"}

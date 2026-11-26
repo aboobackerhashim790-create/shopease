@@ -11,7 +11,9 @@ function DeliveryAndItems({ addresses, selectedAddressId, onSelectAddress, items
             <h2>Delivery address</h2>
             <p className="store-muted">Select where you want your order delivered.</p>
           </div>
-          <Link className="store-button" to="/home/account/addresses">Add or edit address</Link>
+          <Link className="store-button" to="/home/account/addresses">
+            Add or edit address
+          </Link>
         </div>
 
         {addresses.length === 0 ? (
@@ -28,11 +30,19 @@ function DeliveryAndItems({ addresses, selectedAddressId, onSelectAddress, items
                   onChange={() => onSelectAddress(address._id)}
                 />
                 <span>
-                  <strong>{address.label || "Address"}{address.isDefault ? " · Default" : ""}</strong>
+                  <strong>
+                    {address.label || "Address"}
+                    {address.isDefault ? " · Default" : ""}
+                  </strong>
                   <span>{address.fullName}</span>
                   <span>{address.phone}</span>
-                  <span>{address.addressLine1}{address.addressLine2 ? `, ${address.addressLine2}` : ""}</span>
-                  <span>{address.city}, {address.state} {address.postalCode}</span>
+                  <span>
+                    {address.addressLine1}
+                    {address.addressLine2 ? `, ${address.addressLine2}` : ""}
+                  </span>
+                  <span>
+                    {address.city}, {address.state} {address.postalCode}
+                  </span>
                   <span>{address.country}</span>
                 </span>
               </label>
@@ -57,7 +67,11 @@ function DeliveryAndItems({ addresses, selectedAddressId, onSelectAddress, items
                 <div className="checkout-item__details">
                   <strong>{item.product?.name || "Unavailable product"}</strong>
                   {item.variant && (
-                    <span>{[item.variant.options?.color, item.variant.options?.storage].filter(Boolean).join(" · ")}</span>
+                    <span>
+                      {[item.variant.options?.color, item.variant.options?.storage]
+                        .filter(Boolean)
+                        .join(" · ")}
+                    </span>
                   )}
                   <span>Quantity: {item.quantity}</span>
                   {!item.available && <span className="store-unavailable">{item.message}</span>}

@@ -19,7 +19,10 @@ API.interceptors.response.use(async (response) => {
 
   const config = response.config;
   const requestPath = new URL(config.url, config.baseURL).pathname;
-  const isAuthRequest = /\/auth\/(login|google|refresh|logout|signup|verify-email|resend-verification|forgot-password|reset-password)$/.test(requestPath);
+  const isAuthRequest =
+    /\/auth\/(login|google|refresh|logout|signup|verify-email|resend-verification|forgot-password|reset-password)$/.test(
+      requestPath,
+    );
   if (config._retriedAfterRefresh || isAuthRequest) return response;
 
   config._retriedAfterRefresh = true;

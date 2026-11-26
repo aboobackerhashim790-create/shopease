@@ -203,7 +203,9 @@
 }
 
 .category-table td:last-child .category-listing-button:hover,
-.category-table td:last-child button:not(.category-delete-button):not(.category-listing-button):hover {
+.category-table
+  td:last-child
+  button:not(.category-delete-button):not(.category-listing-button):hover {
   background: #f1f6f4;
 }
 

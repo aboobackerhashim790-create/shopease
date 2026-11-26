@@ -46,11 +46,7 @@ function GoogleSignInButton({ buttonText = "continue_with" }) {
     activeGoogleCallback = handleCredential;
 
     function initializeGoogleButton() {
-      if (
-        cancelled ||
-        !window.google?.accounts?.id ||
-        !buttonContainer.current
-      ) {
+      if (cancelled || !window.google?.accounts?.id || !buttonContainer.current) {
         return;
       }
 
@@ -79,9 +75,7 @@ function GoogleSignInButton({ buttonText = "continue_with" }) {
     if (window.google?.accounts?.id) {
       initializeGoogleButton();
     } else {
-      script = document.querySelector(
-        'script[src="https://accounts.google.com/gsi/client"]',
-      );
+      script = document.querySelector('script[src="https://accounts.google.com/gsi/client"]');
 
       if (!script) {
         script = document.createElement("script");

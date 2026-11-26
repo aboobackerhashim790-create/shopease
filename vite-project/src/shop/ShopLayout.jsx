@@ -1,12 +1,6 @@
 import API, { isSuccess } from "../api/client.js";
 import { useCallback, useEffect, useState } from "react";
-import {
-  Link,
-  NavLink,
-  Outlet,
-  useLocation,
-  useNavigate,
-} from "react-router-dom";
+import { Link, NavLink, Outlet, useLocation, useNavigate } from "react-router-dom";
 import LogoutButton from "../components/LogoutButton";
 import "./ShopLayout.css";
 
@@ -22,9 +16,7 @@ function ShopLayout() {
   useEffect(() => {
     let active = true;
     API.get("/auth/me")
-      .then(async (response) =>
-        isSuccess(response) ? response.data.user : null,
-      )
+      .then(async (response) => (isSuccess(response) ? response.data.user : null))
       .then((currentUser) => {
         if (active) setUser(currentUser);
       })
@@ -53,17 +45,12 @@ function ShopLayout() {
       ]);
       if (isSuccess(cartResponse)) {
         setCartCount(
-          (cartResponse.data.cart?.items || []).reduce(
-            (total, item) => total + item.quantity,
-            0,
-          ),
+          (cartResponse.data.cart?.items || []).reduce((total, item) => total + item.quantity, 0),
         );
       }
       if (isSuccess(wishlistResponse)) {
         setWishlistIds(
-          (wishlistResponse.data.items || [])
-            .map((entry) => entry.product?._id)
-            .filter(Boolean),
+          (wishlistResponse.data.items || []).map((entry) => entry.product?._id).filter(Boolean),
         );
       }
     } catch {
@@ -140,30 +127,20 @@ function ShopLayout() {
           >
             ♡{wishlistIds.length > 0 && <span>{wishlistIds.length}</span>}
           </Link>
-          <Link
-            className="shop-icon-link"
-            to="/home/cart"
-            aria-label={`Cart, ${cartCount} items`}
-          >
+          <Link className="shop-icon-link" to="/home/cart" aria-label={`Cart, ${cartCount} items`}>
             🛒{cartCount > 0 && <span>{cartCount}</span>}
           </Link>
           {user ? (
             <LogoutButton className="shop-logout-button" />
           ) : (
-            <Link
-              className="shop-login-link"
-              to="/auth/login"
-              state={{ from: location }}
-            >
+            <Link className="shop-login-link" to="/auth/login" state={{ from: location }}>
               Sign In
             </Link>
           )}
         </div>
       </header>
 
-      <main
-        className={`shop-content${location.pathname === "/home" ? " shop-content--home" : ""}`}
-      >
+      <main className={`shop-content${location.pathname === "/home" ? " shop-content--home" : ""}`}>
         <Outlet
           context={{
             user,

@@ -47,15 +47,11 @@ function CheckoutPage() {
     async function loadCheckout() {
       try {
         const response = await API.get("/store/checkout", {
-          params: buyNow
-            ? { buyNow: "true", ...buyNow }
-            : undefined,
+          params: buyNow ? { buyNow: "true", ...buyNow } : undefined,
         });
 
         if (!isSuccess(response)) {
-          throw new Error(
-            response.data.message || "Could not load checkout information.",
-          );
+          throw new Error(response.data.message || "Could not load checkout information.");
         }
 
         if (!isMounted) return;
@@ -68,9 +64,7 @@ function CheckoutPage() {
 
         try {
           const couponResponse = await API.get("/store/coupons/available", {
-            params: buyNow
-              ? { buyNow: "true", ...buyNow }
-              : undefined,
+            params: buyNow ? { buyNow: "true", ...buyNow } : undefined,
           });
           if (isMounted && isSuccess(couponResponse)) {
             setAvailableCoupons(couponResponse.data.coupons || []);
@@ -82,8 +76,8 @@ function CheckoutPage() {
         if (isMounted) {
           setError(
             requestError.response?.data?.message ||
-            requestError.message ||
-            "Could not load checkout information.",
+              requestError.message ||
+              "Could not load checkout information.",
           );
         }
       } finally {
@@ -138,9 +132,7 @@ function CheckoutPage() {
       }
 
       if (!isSuccess(response)) {
-        throw new Error(
-          response.data.message || "Could not place your order.",
-        );
+        throw new Error(response.data.message || "Could not place your order.");
       }
 
       navigate("/home/order-confirmation", {
@@ -153,8 +145,8 @@ function CheckoutPage() {
     } catch (requestError) {
       setError(
         requestError.response?.data?.message ||
-        requestError.message ||
-        "Could not place your order.",
+          requestError.message ||
+          "Could not place your order.",
       );
     } finally {
       setPlacingOrder(false);
@@ -221,8 +213,9 @@ function CheckoutPage() {
             pendingRazorpayOrderId.current = "";
           } catch (verifyError) {
             setError(
-              verifyError.response?.data?.message || verifyError.message ||
-              "Payment could not be verified. Please contact support before trying again.",
+              verifyError.response?.data?.message ||
+                verifyError.message ||
+                "Payment could not be verified. Please contact support before trying again.",
             );
           } finally {
             setPlacingOrder(false);
@@ -240,11 +233,14 @@ function CheckoutPage() {
                   cancelResponse.data.message || "Could not update the payment status.",
                 );
               }
-              setError("Payment was cancelled. Your order is still pending; you can retry payment.");
+              setError(
+                "Payment was cancelled. Your order is still pending; you can retry payment.",
+              );
             } catch (cancelError) {
               setError(
-                cancelError.response?.data?.message || cancelError.message ||
-                "Payment window closed, but its status could not be updated. Refresh your orders before retrying.",
+                cancelError.response?.data?.message ||
+                  cancelError.message ||
+                  "Payment window closed, but its status could not be updated. Refresh your orders before retrying.",
               );
             }
             setPlacingOrder(false);
@@ -266,7 +262,8 @@ function CheckoutPage() {
           }
         }
         setError(
-          failure.error?.description || "Payment failed. You can retry without creating another order.",
+          failure.error?.description ||
+            "Payment failed. You can retry without creating another order.",
         );
         setPlacingOrder(false);
       });
@@ -275,8 +272,9 @@ function CheckoutPage() {
       checkout.open();
     } catch (requestError) {
       setError(
-        requestError.response?.data?.message || requestError.message ||
-        "Could not start online payment.",
+        requestError.response?.data?.message ||
+          requestError.message ||
+          "Could not start online payment.",
       );
       setPlacingOrder(false);
     }
@@ -330,15 +328,15 @@ function CheckoutPage() {
       }
       setAppliedCoupon(response.data.coupon);
       setTotalAmount(response.data.totalAmount);
-      setCouponMessage(`Coupon ${response.data.coupon.code} applied. You save ${formatPrice(response.data.discountAmount)}.`);
+      setCouponMessage(
+        `Coupon ${response.data.coupon.code} applied. You save ${formatPrice(response.data.discountAmount)}.`,
+      );
       setCouponIsError(false);
     } catch (requestError) {
       setAppliedCoupon(null);
       setTotalAmount(cart?.total || 0);
       const errMsg =
-        requestError.response?.data?.message ||
-        requestError.message ||
-        "Invalid coupon code.";
+        requestError.response?.data?.message || requestError.message || "Invalid coupon code.";
       setCouponMessage(errMsg);
       setCouponIsError(true);
     }
@@ -349,9 +347,7 @@ function CheckoutPage() {
         <div>
           <span className="store-eyebrow">YOUR ORDER</span>
           <h1>Checkout</h1>
-          <p className="store-muted">
-            Choose a delivery address and review your items.
-          </p>
+          <p className="store-muted">Choose a delivery address and review your items.</p>
         </div>
 
         <Link className="store-button" to={buyNow ? "/home/products" : "/home/cart"}>

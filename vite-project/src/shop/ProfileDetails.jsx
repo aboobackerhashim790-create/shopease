@@ -19,9 +19,7 @@ function ProfileDetails() {
         const profileResult = profileResponse.data;
 
         if (!isSuccess(profileResponse)) {
-          throw new Error(
-            profileResult.message || "Could not load your profile.",
-          );
+          throw new Error(profileResult.message || "Could not load your profile.");
         }
 
         if (!isMounted) return;
@@ -31,8 +29,7 @@ function ProfileDetails() {
 
         if (isSuccess(addressResponse)) {
           const addressResult = addressResponse.data;
-          const address =
-            addressResult.addresses?.find((item) => item.isDefault) || null;
+          const address = addressResult.addresses?.find((item) => item.isDefault) || null;
 
           if (isMounted) setDefaultAddress(address);
         }
@@ -63,9 +60,7 @@ function ProfileDetails() {
   }
 
   if (!user) {
-    return (
-      <p className="profile-status">Profile information is unavailable.</p>
-    );
+    return <p className="profile-status">Profile information is unavailable.</p>;
   }
 
   const firstName = user.fullName?.trim().split(/\s+/)[0] || "there";
@@ -75,18 +70,14 @@ function ProfileDetails() {
       <header className="profile-heading">
         <p className="profile-eyebrow">YOUR PRIVATE SANCTUARY</p>
         <h1>Account &amp; Personal Preferences</h1>
-        <p>
-          Keep your ShopEase details up to date and ready for your next order.
-        </p>
+        <p>Keep your ShopEase details up to date and ready for your next order.</p>
       </header>
 
       <section className="profile-welcome-card">
         <div>
           <span className="profile-member-badge">✦ SHOP EASE MEMBER</span>
           <h2>Warm welcome, {firstName}</h2>
-          <p>
-            Your account details and personal referral code are gathered here.
-          </p>
+          <p>Your account details and personal referral code are gathered here.</p>
         </div>
         <div className="profile-welcome-icon profile-avatar" aria-hidden="true">
           {user.profilePhotoUrl ? (
@@ -136,8 +127,8 @@ function ProfileDetails() {
             <span>Default delivery address</span>
             {defaultAddress ? (
               <strong>
-                {defaultAddress.addressLine1}, {defaultAddress.city},{" "}
-                {defaultAddress.state} {defaultAddress.postalCode}
+                {defaultAddress.addressLine1}, {defaultAddress.city}, {defaultAddress.state}{" "}
+                {defaultAddress.postalCode}
               </strong>
             ) : (
               <strong>No default address saved</strong>

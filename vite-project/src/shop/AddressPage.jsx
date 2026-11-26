@@ -45,8 +45,7 @@ const pinErrorMessages = {
   INVALID_PIN_CODE: "Enter a valid 6-digit Indian PIN code.",
   PIN_CODE_NOT_FOUND: "That PIN code was not found in the postal directory.",
   PIN_STATE_MISMATCH: "The PIN code does not match the selected state.",
-  PIN_LOOKUP_UNAVAILABLE:
-    "PIN code lookup is temporarily unavailable. Please try again.",
+  PIN_LOOKUP_UNAVAILABLE: "PIN code lookup is temporarily unavailable. Please try again.",
   STATE_REQUIRED: "Select a state before checking the PIN code.",
 };
 
@@ -64,27 +63,42 @@ const blankAddress = {
 };
 
 const addressFieldNames = [
-  "fullName", "phone", "addressLine1", "addressLine2",
-  "city", "state", "postalCode", "country",
+  "fullName",
+  "phone",
+  "addressLine1",
+  "addressLine2",
+  "city",
+  "state",
+  "postalCode",
+  "country",
 ];
 
 function validateAddressField(name, value, form) {
   const text = String(value ?? "").trim();
   const labels = {
-    fullName: "Recipient name", addressLine1: "Address line 1",
-    city: "City", state: "State / region", postalCode: "Postal code", country: "Country",
+    fullName: "Recipient name",
+    addressLine1: "Address line 1",
+    city: "City",
+    state: "State / region",
+    postalCode: "Postal code",
+    country: "Country",
   };
   if (labels[name] && !text) return `${labels[name]} is required.`;
-  if (name === "fullName" && text.length > 100) return "Recipient name must be 100 characters or fewer.";
-  if (name === "phone" && !/^[6-9]\d{9}$/.test(text)) return "Enter a valid 10-digit Indian mobile number.";
-  if (name === "addressLine1" && text.length > 160) return "Address line 1 must be 160 characters or fewer.";
-  if (name === "addressLine2" && text.length > 160) return "Address line 2 must be 160 characters or fewer.";
+  if (name === "fullName" && text.length > 100)
+    return "Recipient name must be 100 characters or fewer.";
+  if (name === "phone" && !/^[6-9]\d{9}$/.test(text))
+    return "Enter a valid 10-digit Indian mobile number.";
+  if (name === "addressLine1" && text.length > 160)
+    return "Address line 1 must be 160 characters or fewer.";
+  if (name === "addressLine2" && text.length > 160)
+    return "Address line 2 must be 160 characters or fewer.";
   if (name === "city" && text.length > 80) return "City must be 80 characters or fewer.";
   if (name === "state" && text.length > 80) return "State must be 80 characters or fewer.";
   if (name === "country" && text.length > 80) return "Country must be 80 characters or fewer.";
   if (name === "postalCode") {
     if (text.length > 20) return "Postal code must be 20 characters or fewer.";
-    if (form.country.trim().toLowerCase() === "india" && !/^\d{6}$/.test(text)) return "Enter a valid 6-digit Indian PIN code.";
+    if (form.country.trim().toLowerCase() === "india" && !/^\d{6}$/.test(text))
+      return "Enter a valid 6-digit Indian PIN code.";
   }
   return "";
 }
@@ -92,8 +106,7 @@ function validateAddressField(name, value, form) {
 async function requestAddresses() {
   const response = await API.get("/profile/addresses");
   const result = response.data;
-  if (!isSuccess(response))
-    throw new Error(result.message || "Could not load addresses.");
+  if (!isSuccess(response)) throw new Error(result.message || "Could not load addresses.");
   return result.addresses || [];
 }
 
@@ -207,9 +220,7 @@ function AddressesPage() {
       const result = response.data;
       if (!isSuccess(response))
         throw new Error(
-          pinErrorMessages[result.code] ||
-          result.message ||
-          "Could not check this PIN code.",
+          pinErrorMessages[result.code] || result.message || "Could not check this PIN code.",
         );
       if (requestId !== pinLookupRequest.current) return;
       setForm((current) => ({
@@ -258,9 +269,7 @@ function AddressesPage() {
       const result = response.data;
       if (!isSuccess(response))
         throw new Error(
-          pinErrorMessages[result.code] ||
-          result.message ||
-          "Could not save this address.",
+          pinErrorMessages[result.code] || result.message || "Could not save this address.",
         );
       setMessage(result.message);
       setForm(blankAddress);
@@ -312,7 +321,8 @@ function AddressesPage() {
     const optionalAndEmpty = name === "addressLine2" && !form.addressLine2.trim();
     return {
       "aria-invalid": touched && Boolean(fieldErrors[name]),
-      className: touched && !optionalAndEmpty ? (fieldErrors[name] ? "field-invalid" : "field-valid") : "",
+      className:
+        touched && !optionalAndEmpty ? (fieldErrors[name] ? "field-invalid" : "field-valid") : "",
       onBlur: () => {
         setTouchedFields((current) => ({ ...current, [name]: true }));
         setFieldErrors((current) => ({
@@ -339,9 +349,7 @@ function AddressesPage() {
   async function setDefault(addressId) {
     setError("");
     try {
-      const response = await API.patch(
-        `/profile/addresses/${addressId}/default`,
-      );
+      const response = await API.patch(`/profile/addresses/${addressId}/default`);
       const result = response.data;
       if (!isSuccess(response))
         throw new Error(result.message || "Could not set the default address.");
@@ -353,14 +361,12 @@ function AddressesPage() {
   }
 
   async function removeAddress(address) {
-    if (!window.confirm(`Remove the ${address.label || "saved"} address?`))
-      return;
+    if (!window.confirm(`Remove the ${address.label || "saved"} address?`)) return;
     setError("");
     try {
       const response = await API.delete(`/profile/addresses/${address._id}`);
       const result = response.data;
-      if (!isSuccess(response))
-        throw new Error(result.message || "Could not remove this address.");
+      if (!isSuccess(response)) throw new Error(result.message || "Could not remove this address.");
       setMessage(result.message);
       await loadAddresses();
     } catch (requestError) {
@@ -504,16 +510,8 @@ function AddressesPage() {
               onChange={updateField}
               {...fieldProps("postalCode")}
               maxLength={form.country.trim().toLowerCase() === "india" ? 6 : 20}
-              inputMode={
-                form.country.trim().toLowerCase() === "india"
-                  ? "numeric"
-                  : undefined
-              }
-              pattern={
-                form.country.trim().toLowerCase() === "india"
-                  ? "[0-9]{6}"
-                  : undefined
-              }
+              inputMode={form.country.trim().toLowerCase() === "india" ? "numeric" : undefined}
+              pattern={form.country.trim().toLowerCase() === "india" ? "[0-9]{6}" : undefined}
             />
             {fieldFeedback("postalCode")}
           </label>
@@ -557,8 +555,7 @@ function AddressesPage() {
           <div>
             <h2>Your saved places</h2>
             <p>
-              {addresses.length}{" "}
-              {addresses.length === 1 ? "address" : "addresses"}
+              {addresses.length} {addresses.length === 1 ? "address" : "addresses"}
             </p>
           </div>
         </div>
@@ -574,12 +571,8 @@ function AddressesPage() {
                 key={address._id}
               >
                 <div className="saved-address-topline">
-                  <span className="saved-address-label">
-                    ⌂ &nbsp;{address.label}
-                  </span>
-                  {address.isDefault && (
-                    <span className="default-address-badge">DEFAULT</span>
-                  )}
+                  <span className="saved-address-label">⌂ &nbsp;{address.label}</span>
+                  {address.isDefault && <span className="default-address-badge">DEFAULT</span>}
                 </div>
                 <strong>{address.fullName}</strong>
                 <p>
@@ -594,10 +587,7 @@ function AddressesPage() {
                 </p>
                 <div className="saved-address-actions">
                   {!address.isDefault && (
-                    <button
-                      type="button"
-                      onClick={() => setDefault(address._id)}
-                    >
+                    <button type="button" onClick={() => setDefault(address._id)}>
                       Make default
                     </button>
                   )}

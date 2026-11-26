@@ -24,7 +24,7 @@ export default function StoreProductCard({
     product.listingPrice ??
     (variants.length
       ? Math.min(...variants.map((variant) => variant.salePrice ?? variant.price))
-      : product.salePrice ?? product.price);
+      : (product.salePrice ?? product.price));
   const startingVariant = variants.find(
     (variant) => (variant.salePrice ?? variant.price) === price,
   );
@@ -38,10 +38,7 @@ export default function StoreProductCard({
   return (
     <article className="store-product-card">
       <div className="store-product-card__image-wrap">
-        <Link
-          to={`/home/products/${product.slug}`}
-          aria-label={`View ${product.name}`}
-        >
+        <Link to={`/home/products/${product.slug}`} aria-label={`View ${product.name}`}>
           {image ? (
             <img src={image} alt={product.name} />
           ) : (
@@ -52,9 +49,7 @@ export default function StoreProductCard({
           type="button"
           className={`store-heart ${wished ? "is-wished" : ""}`}
           aria-label={
-            wished
-              ? `Remove ${product.name} from wishlist`
-              : `Add ${product.name} to wishlist`
+            wished ? `Remove ${product.name} from wishlist` : `Add ${product.name} to wishlist`
           }
           aria-pressed={wished}
           onClick={() => onToggleWishlist(product)}
@@ -64,18 +59,11 @@ export default function StoreProductCard({
       </div>
       <div className="store-product-card__body">
         <small>{product.categoryId?.name || "Gadget"}</small>
-        <Link
-          className="store-product-card__name"
-          to={`/home/products/${product.slug}`}
-        >
+        <Link className="store-product-card__name" to={`/home/products/${product.slug}`}>
           {product.name}
         </Link>
         <div className="store-product-card__price-row">
-          <strong>
-            {variants.length > 0
-              ? `From ${formatPrice(price)}`
-              : formatPrice(price)}
-          </strong>
+          <strong>{variants.length > 0 ? `From ${formatPrice(price)}` : formatPrice(price)}</strong>
           {compareAtPrice > price && <del>{formatPrice(compareAtPrice)}</del>}
         </div>
         {variants.length > 0 ? (

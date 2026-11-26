@@ -93,22 +93,14 @@ function ProductDeleteModal({ product, onCancel, onConfirm }) {
       <div className="products-confirm-modal">
         <h2>Delete product permanently?</h2>
         <p>
-          This permanently removes <strong>{product.name}</strong>. If it
-          appears in past orders, consider unlisting it instead.
+          This permanently removes <strong>{product.name}</strong>. If it appears in past orders,
+          consider unlisting it instead.
         </p>
         <div className="products-modal-actions">
-          <button
-            className="products-secondary-button"
-            type="button"
-            onClick={onCancel}
-          >
+          <button className="products-secondary-button" type="button" onClick={onCancel}>
             Cancel
           </button>
-          <button
-            className="products-danger-button"
-            type="button"
-            onClick={onConfirm}
-          >
+          <button className="products-danger-button" type="button" onClick={onConfirm}>
             Delete permanently
           </button>
         </div>

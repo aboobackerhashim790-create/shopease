@@ -40,7 +40,6 @@ function Sidebar() {
         <NavLink to="/admin/offer-campaigns" className="admin-nav-link">
           <span>✦</span> Offer campaigns
         </NavLink>
-
       </nav>
 
       <div className="admin-sidebar-bottom">

@@ -17,8 +17,7 @@ function ProfileEditPage() {
     API.get("/auth/me")
       .then(async (response) => {
         const result = response.data;
-        if (!isSuccess(response))
-          throw new Error(result.message || "Could not load your profile.");
+        if (!isSuccess(response)) throw new Error(result.message || "Could not load your profile.");
         setUser(result.user);
         setFullName(result.user.fullName || "");
       })
@@ -34,8 +33,7 @@ function ProfileEditPage() {
     try {
       const response = await API.patch("/profile/me", { fullName });
       const result = response.data;
-      if (!isSuccess(response))
-        throw new Error(result.message || "Could not update your profile.");
+      if (!isSuccess(response)) throw new Error(result.message || "Could not update your profile.");
       setUser((current) => ({ ...current, ...result.user }));
       navigate("/home/account", { replace: true });
     } catch (requestError) {
@@ -59,8 +57,7 @@ function ProfileEditPage() {
       body.append("photo", photo);
       const response = await API.post("/profile/photo", body);
       const result = response.data;
-      if (!isSuccess(response))
-        throw new Error(result.message || "Could not upload your photo.");
+      if (!isSuccess(response)) throw new Error(result.message || "Could not upload your photo.");
       setUser((current) => ({ ...current, ...result.user }));
       setPhoto(null);
       setMessage(result.message);

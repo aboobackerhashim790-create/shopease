@@ -29,26 +29,34 @@ function formatDateTime(value) {
 }
 
 function escapeHtml(value = "") {
-  return String(value).replace(/[&<>"']/g, (character) => ({
-    "&": "&amp;",
-    "<": "&lt;",
-    ">": "&gt;",
-    '"': "&quot;",
-    "'": "&#39;",
-  })[character]);
+  return String(value).replace(
+    /[&<>"']/g,
+    (character) =>
+      ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#39;",
+      })[character],
+  );
 }
 
 function printInvoice(order) {
   const invoiceWindow = window.open("", "_blank", "width=800,height=900");
   if (!invoiceWindow) return;
 
-  const itemRows = (order.items || []).map((item) => `
+  const itemRows = (order.items || [])
+    .map(
+      (item) => `
     <tr>
       <td>${escapeHtml(item.name)}<small>${escapeHtml(item.sku || "")}</small></td>
       <td>${item.quantity}</td>
       <td>${escapeHtml(formatMoney(item.unitPrice, order.currency))}</td>
       <td>${escapeHtml(formatMoney(item.itemTotal, order.currency))}</td>
-    </tr>`).join("");
+    </tr>`,
+    )
+    .join("");
   const address = order.deliveryAddress || {};
 
   invoiceWindow.document.write(`<!doctype html>
@@ -73,9 +81,11 @@ function printInvoice(order) {
 
 function OrderTracking({ status, history, createdAt, deliveredAt }) {
   if (["Cancelled", "Returned"].includes(status)) {
-    return <p className={`orders-cancelled-note ${status === "Returned" ? "orders-returned-note" : ""}`}>
-      {status === "Returned" ? "This product was returned." : "This product was cancelled."}
-    </p>;
+    return (
+      <p className={`orders-cancelled-note ${status === "Returned" ? "orders-returned-note" : ""}`}>
+        {status === "Returned" ? "This product was returned." : "This product was cancelled."}
+      </p>
+    );
   }
 
   const activeIndex = ORDER_STEPS.indexOf(status);
@@ -83,12 +93,16 @@ function OrderTracking({ status, history, createdAt, deliveredAt }) {
     <ol className="orders-tracking" aria-label={`Order tracking: ${status}`}>
       {ORDER_STEPS.map((step, index) => {
         const statusEvent = history.filter((event) => event.status === step).at(-1);
-        const changedAt = statusEvent?.updatedAt || (step === "Pending" ? createdAt : step === "Delivered" ? deliveredAt : null);
+        const changedAt =
+          statusEvent?.updatedAt ||
+          (step === "Pending" ? createdAt : step === "Delivered" ? deliveredAt : null);
         return (
           <li className={index <= activeIndex ? "is-complete" : ""} key={step}>
             <span className="orders-tracking__dot" />
             <span>{step}</span>
-            {changedAt && <time className="orders-tracking__time">{formatDateTime(changedAt)}</time>}
+            {changedAt && (
+              <time className="orders-tracking__time">{formatDateTime(changedAt)}</time>
+            )}
           </li>
         );
       })}
@@ -98,10 +112,12 @@ function OrderTracking({ status, history, createdAt, deliveredAt }) {
 
 OrderTracking.propTypes = {
   status: PropTypes.string.isRequired,
-  history: PropTypes.arrayOf(PropTypes.shape({
-    status: PropTypes.string.isRequired,
-    updatedAt: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]).isRequired,
-  })),
+  history: PropTypes.arrayOf(
+    PropTypes.shape({
+      status: PropTypes.string.isRequired,
+      updatedAt: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]).isRequired,
+    }),
+  ),
   createdAt: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]),
   deliveredAt: PropTypes.oneOfType([PropTypes.string, PropTypes.instanceOf(Date)]),
 };
@@ -129,11 +145,16 @@ function OrdersPage() {
       const response = await API.get("/profile/orders", {
         params: { search, status, page, limit: PAGE_SIZE },
       });
-      if (!isSuccess(response)) throw new Error(response.data?.message || "Could not load your orders.");
+      if (!isSuccess(response))
+        throw new Error(response.data?.message || "Could not load your orders.");
       setOrders(response.data.orders || []);
       setPagination(response.data.pagination || { page, totalPages: 0, totalOrders: 0 });
     } catch (requestError) {
-      setError(requestError.response?.data?.message || requestError.message || "Could not load your orders.");
+      setError(
+        requestError.response?.data?.message ||
+          requestError.message ||
+          "Could not load your orders.",
+      );
     } finally {
       setLoading(false);
     }
@@ -162,26 +183,32 @@ function OrdersPage() {
     setError("");
     setSuccessMessage("");
     try {
-      const response = action.type === "cancel"
-        ? await API.patch(`/profile/orders/${action.order._id}/cancel`, {
-          reason,
-        })
-        : action.type === "cancel-item"
-          ? await API.patch(
-            `/profile/orders/${action.order._id}/items/${action.itemIndex}/cancel`,
-            { reason },
-          )
-          : await API.post(`/profile/orders/${action.order._id}/return`, {
-            reason,
-            itemIndex: action.itemIndex,
-          });
-      if (!isSuccess(response)) throw new Error(response.data?.message || "Could not update this order.");
+      const response =
+        action.type === "cancel"
+          ? await API.patch(`/profile/orders/${action.order._id}/cancel`, {
+              reason,
+            })
+          : action.type === "cancel-item"
+            ? await API.patch(
+                `/profile/orders/${action.order._id}/items/${action.itemIndex}/cancel`,
+                { reason },
+              )
+            : await API.post(`/profile/orders/${action.order._id}/return`, {
+                reason,
+                itemIndex: action.itemIndex,
+              });
+      if (!isSuccess(response))
+        throw new Error(response.data?.message || "Could not update this order.");
       setAction(null);
       setReason("");
       setSuccessMessage(response.data?.message || "Order updated.");
       await loadOrders();
     } catch (requestError) {
-      setError(requestError.response?.data?.message || requestError.message || "Could not update this order.");
+      setError(
+        requestError.response?.data?.message ||
+          requestError.message ||
+          "Could not update this order.",
+      );
     } finally {
       setSaving(false);
     }
@@ -195,7 +222,9 @@ function OrdersPage() {
         <div>
           <p className="orders-eyebrow">YOUR ACCOUNT</p>
           <h1>Orders &amp; tracking</h1>
-          <p className="orders-page__intro">Review your purchases and follow each order’s progress.</p>
+          <p className="orders-page__intro">
+            Review your purchases and follow each order’s progress.
+          </p>
         </div>
         <div className="orders-count">
           <span>Total orders</span>
@@ -213,35 +242,65 @@ function OrdersPage() {
               placeholder="Search by order number or product"
             />
           </label>
-          <button className="orders-button orders-button--primary" type="submit">Search</button>
-          <button className="orders-button" type="button" onClick={clearSearch}>Clear</button>
+          <button className="orders-button orders-button--primary" type="submit">
+            Search
+          </button>
+          <button className="orders-button" type="button" onClick={clearSearch}>
+            Clear
+          </button>
           <label className="orders-status-filter">
             <span>Status</span>
-            <select value={status} onChange={(event) => { setStatus(event.target.value); setPage(1); }}>
+            <select
+              value={status}
+              onChange={(event) => {
+                setStatus(event.target.value);
+                setPage(1);
+              }}
+            >
               <option value="all">All orders</option>
-              {ORDER_STEPS.map((value) => <option key={value} value={value}>{value}</option>)}
+              {ORDER_STEPS.map((value) => (
+                <option key={value} value={value}>
+                  {value}
+                </option>
+              ))}
               <option value="Cancelled">Cancelled</option>
             </select>
           </label>
         </form>
 
-        {error && <p className="orders-message orders-message--error" role="alert">{error}</p>}
-        {successMessage && <p className="orders-message orders-message--success" role="status">{successMessage}</p>}
+        {error && (
+          <p className="orders-message orders-message--error" role="alert">
+            {error}
+          </p>
+        )}
+        {successMessage && (
+          <p className="orders-message orders-message--success" role="status">
+            {successMessage}
+          </p>
+        )}
         {loading ? (
-          <p className="orders-message" role="status">Loading your orders…</p>
+          <p className="orders-message" role="status">
+            Loading your orders…
+          </p>
         ) : orders.length === 0 ? (
           <div className="orders-empty">
             <h2>{search || status !== "all" ? "No matching orders" : "No orders yet"}</h2>
-            <p>{search || status !== "all" ? "Try another search or status." : "Your completed checkouts will appear here."}</p>
+            <p>
+              {search || status !== "all"
+                ? "Try another search or status."
+                : "Your completed checkouts will appear here."}
+            </p>
           </div>
         ) : (
           <div className="orders-list">
             {orders.map((order) => {
               const expanded = expandedOrderId === order._id;
               const activeItems = (order.items || []).filter((item) => !item.isCancelled);
-              const canCancel = activeItems.length > 0 && activeItems.every((item) =>
-                ["Pending", "Confirmed"].includes(item.fulfillmentStatus || order.orderStatus),
-              );
+              const canCancel =
+                activeItems.length > 0 &&
+                activeItems.every((item) =>
+                  ["Pending", "Confirmed"].includes(item.fulfillmentStatus || order.orderStatus),
+                );
               // If every non-cancelled item is Returned, show "Returned" on the badge
               const allItemsReturned =
                 activeItems.length > 0 &&
@@ -251,7 +310,9 @@ function OrdersPage() {
               const hasReturnableItem = activeItems.some(
                 (item) =>
                   (item.fulfillmentStatus || order.orderStatus) === "Delivered" &&
-                  !["Requested", "Accepted", "Rejected"].includes(item.returnRequest?.status || "None"),
+                  !["Requested", "Accepted", "Rejected"].includes(
+                    item.returnRequest?.status || "None",
+                  ),
               );
 
               return (
@@ -261,26 +322,62 @@ function OrdersPage() {
                       <span className="orders-eyebrow">ORDER NUMBER</span>
                       <h2>{order.orderNumber}</h2>
                     </div>
-                    <span className={`order-status order-status--${displayStatus.toLowerCase().replaceAll(" ", "-")}`}>
+                    <span
+                      className={`order-status order-status--${displayStatus.toLowerCase().replaceAll(" ", "-")}`}
+                    >
                       {displayStatus}
                     </span>
                   </div>
 
                   <div className="order-card__summary">
-                    <div><span>Placed</span><strong>{formatDate(order.createdAt)}</strong></div>
-                    <div><span>Items</span><strong>{order.items?.reduce((sum, item) => sum + (item.isCancelled ? 0 : item.quantity), 0) || 0}</strong></div>
-                    <div><span>Payment</span><strong>{order.paymentMethod === "COD" ? "Cash on Delivery" : "Razorpay"} · {order.paymentStatus}</strong></div>
-                    <div><span>Total</span><strong>{formatMoney(order.totalAmount, order.currency)}</strong></div>
+                    <div>
+                      <span>Placed</span>
+                      <strong>{formatDate(order.createdAt)}</strong>
+                    </div>
+                    <div>
+                      <span>Items</span>
+                      <strong>
+                        {order.items?.reduce(
+                          (sum, item) => sum + (item.isCancelled ? 0 : item.quantity),
+                          0,
+                        ) || 0}
+                      </strong>
+                    </div>
+                    <div>
+                      <span>Payment</span>
+                      <strong>
+                        {order.paymentMethod === "COD" ? "Cash on Delivery" : "Razorpay"} ·{" "}
+                        {order.paymentStatus}
+                      </strong>
+                    </div>
+                    <div>
+                      <span>Total</span>
+                      <strong>{formatMoney(order.totalAmount, order.currency)}</strong>
+                    </div>
                     {order.refundDestination && order.refundDestination !== "None" && (
-                      <div><span>Refund</span><strong>{order.refundDestination === "Razorpay" ? "Razorpay → original payment method" : order.refundDestination} · {order.refundStatus || (order.paymentStatus === "Refunded" ? "Completed" : "Pending")}</strong></div>
+                      <div>
+                        <span>Refund</span>
+                        <strong>
+                          {order.refundDestination === "Razorpay"
+                            ? "Razorpay → original payment method"
+                            : order.refundDestination}{" "}
+                          ·{" "}
+                          {order.refundStatus ||
+                            (order.paymentStatus === "Refunded" ? "Completed" : "Pending")}
+                        </strong>
+                      </div>
                     )}
                   </div>
 
                   <div className="order-card__items-preview">
                     {(order.items || []).slice(0, 2).map((item, index) => (
-                      <span key={`${item.sku}-${index}`}>{item.name} × {item.quantity}</span>
+                      <span key={`${item.sku}-${index}`}>
+                        {item.name} × {item.quantity}
+                      </span>
                     ))}
-                    {(order.items?.length || 0) > 2 && <span>+{order.items.length - 2} more item(s)</span>}
+                    {(order.items?.length || 0) > 2 && (
+                      <span>+{order.items.length - 2} more item(s)</span>
+                    )}
                   </div>
 
                   <div className="order-card__actions">
@@ -292,20 +389,43 @@ function OrdersPage() {
                     >
                       {expanded ? "Hide details" : "Track order"}
                     </button>
-                    <button className="orders-button" type="button" onClick={() => printInvoice(order)}>Invoice / Save PDF</button>
-                    {canCancel && <button className="orders-button orders-button--danger" type="button" onClick={() => { setAction({ type: "cancel", order }); setReason(""); }}>Cancel order</button>}
-                    {!canCancel && order.orderStatus !== "Delivered" && order.orderStatus !== "Cancelled" && (
-                      <span className="order-action-hint">
-                        Cancellation closes after shipment.
-                      </span>
+                    <button
+                      className="orders-button"
+                      type="button"
+                      onClick={() => printInvoice(order)}
+                    >
+                      Invoice / Save PDF
+                    </button>
+                    {canCancel && (
+                      <button
+                        className="orders-button orders-button--danger"
+                        type="button"
+                        onClick={() => {
+                          setAction({ type: "cancel", order });
+                          setReason("");
+                        }}
+                      >
+                        Cancel order
+                      </button>
                     )}
+                    {!canCancel &&
+                      order.orderStatus !== "Delivered" &&
+                      order.orderStatus !== "Cancelled" && (
+                        <span className="order-action-hint">
+                          Cancellation closes after shipment.
+                        </span>
+                      )}
                     {order.orderStatus === "Delivered" && hasReturnableItem && (
-                      <span className="order-action-hint">Open order details to request a return for an individual item.</span>
+                      <span className="order-action-hint">
+                        Open order details to request a return for an individual item.
+                      </span>
                     )}
                   </div>
 
                   {order.orderStatus === "Cancelled" && order.cancellationReason && (
-                    <p className="order-return-state">Cancellation reason: <strong>{order.cancellationReason}</strong></p>
+                    <p className="order-return-state">
+                      Cancellation reason: <strong>{order.cancellationReason}</strong>
+                    </p>
                   )}
 
                   {expanded && (
@@ -315,15 +435,20 @@ function OrdersPage() {
                         <div className="order-detail-items">
                           {(order.items || []).map((item, index) => {
                             const itemReturnStatus = item.returnRequest?.status || "None";
-                            const itemStatus = item.isCancelled ? "Cancelled" : item.fulfillmentStatus || order.orderStatus;
-                            const itemDeliveredAt = item.deliveredAt || order.deliveredAt || order.updatedAt;
+                            const itemStatus = item.isCancelled
+                              ? "Cancelled"
+                              : item.fulfillmentStatus || order.orderStatus;
+                            const itemDeliveredAt =
+                              item.deliveredAt || order.deliveredAt || order.updatedAt;
                             const itemReturnDeadline = itemDeliveredAt
-                              ? new Date(new Date(itemDeliveredAt).getTime() + 7 * 24 * 60 * 60 * 1000)
+                              ? new Date(
+                                  new Date(itemDeliveredAt).getTime() + 7 * 24 * 60 * 60 * 1000,
+                                )
                               : null;
-                            const itemReturnWindowOpen = itemReturnDeadline && Date.now() <= itemReturnDeadline.getTime();
+                            const itemReturnWindowOpen =
+                              itemReturnDeadline && Date.now() <= itemReturnDeadline.getTime();
                             const canCancelItem =
-                              ["Pending", "Confirmed"].includes(itemStatus) &&
-                              !item.isCancelled;
+                              ["Pending", "Confirmed"].includes(itemStatus) && !item.isCancelled;
                             const canReturnItem =
                               itemStatus === "Delivered" &&
                               itemReturnWindowOpen &&
@@ -332,10 +457,26 @@ function OrdersPage() {
                             return (
                               <div className="order-detail-item" key={`${item.sku}-${index}`}>
                                 {item.image && <img src={item.image} alt="" />}
-                                <div><strong>{item.name}</strong><span>{[item.options?.color, item.options?.storage].filter(Boolean).join(" · ") || item.sku || "Product"} · Qty {item.quantity} · Status: {itemStatus}</span></div>
+                                <div>
+                                  <strong>{item.name}</strong>
+                                  <span>
+                                    {[item.options?.color, item.options?.storage]
+                                      .filter(Boolean)
+                                      .join(" · ") ||
+                                      item.sku ||
+                                      "Product"}{" "}
+                                    · Qty {item.quantity} · Status: {itemStatus}
+                                  </span>
+                                </div>
                                 <strong>{formatMoney(item.itemTotal, order.currency)}</strong>
                                 {item.refundDestination && item.refundDestination !== "None" && (
-                                  <span className="order-item-refund">Refund: {formatMoney(item.refundAmount, order.currency)} · {item.refundDestination === "Razorpay" ? "Razorpay / original method" : item.refundDestination} · {item.refundStatus}</span>
+                                  <span className="order-item-refund">
+                                    Refund: {formatMoney(item.refundAmount, order.currency)} ·{" "}
+                                    {item.refundDestination === "Razorpay"
+                                      ? "Razorpay / original method"
+                                      : item.refundDestination}{" "}
+                                    · {item.refundStatus}
+                                  </span>
                                 )}
                                 <div className="order-item-progress">
                                   <strong>Delivery progress</strong>
@@ -370,12 +511,14 @@ function OrdersPage() {
                                     {itemReturnStatus === "Rejected" ? (
                                       <span className="order-return-response">
                                         <strong>Return request rejected:</strong>{" "}
-                                        {item.returnRequest?.adminMessage || "The return request was rejected."}
+                                        {item.returnRequest?.adminMessage ||
+                                          "The return request was rejected."}
                                       </span>
                                     ) : itemReturnStatus === "Accepted" ? (
                                       <span className="order-return-response">
                                         <strong>Return request accepted:</strong>{" "}
-                                        {item.returnRequest?.adminMessage || "Your return request was accepted."}
+                                        {item.returnRequest?.adminMessage ||
+                                          "Your return request was accepted."}
                                       </span>
                                     ) : itemReturnStatus === "Requested" ? (
                                       <span className="order-return-response">
@@ -383,11 +526,33 @@ function OrdersPage() {
                                       </span>
                                     ) : canReturnItem ? (
                                       <>
-                                        <button className="orders-button" type="button" onClick={() => { setAction({ type: "return", order, itemIndex: index, item }); setReason(""); }}>Request return</button>
-                                        <span>Return this item by {formatDate(itemReturnDeadline)}.</span>
+                                        <button
+                                          className="orders-button"
+                                          type="button"
+                                          onClick={() => {
+                                            setAction({
+                                              type: "return",
+                                              order,
+                                              itemIndex: index,
+                                              item,
+                                            });
+                                            setReason("");
+                                          }}
+                                        >
+                                          Request return
+                                        </button>
+                                        <span>
+                                          Return this item by {formatDate(itemReturnDeadline)}.
+                                        </span>
                                       </>
                                     ) : (
-                                      <span>Return window ended {itemReturnDeadline ? formatDate(itemReturnDeadline) : "(delivery date unavailable)"}.</span>
+                                      <span>
+                                        Return window ended{" "}
+                                        {itemReturnDeadline
+                                          ? formatDate(itemReturnDeadline)
+                                          : "(delivery date unavailable)"}
+                                        .
+                                      </span>
                                     )}
                                   </div>
                                 )}
@@ -399,17 +564,38 @@ function OrdersPage() {
                       <section>
                         <h3>Delivery address</h3>
                         <p className="order-address">
-                          <strong>{order.deliveryAddress?.fullName}</strong><br />
-                          {order.deliveryAddress?.addressLine1}{order.deliveryAddress?.addressLine2 ? `, ${order.deliveryAddress.addressLine2}` : ""}<br />
-                          {order.deliveryAddress?.city}, {order.deliveryAddress?.state} {order.deliveryAddress?.postalCode}<br />
+                          <strong>{order.deliveryAddress?.fullName}</strong>
+                          <br />
+                          {order.deliveryAddress?.addressLine1}
+                          {order.deliveryAddress?.addressLine2
+                            ? `, ${order.deliveryAddress.addressLine2}`
+                            : ""}
+                          <br />
+                          {order.deliveryAddress?.city}, {order.deliveryAddress?.state}{" "}
+                          {order.deliveryAddress?.postalCode}
+                          <br />
                           {order.deliveryAddress?.country} · {order.deliveryAddress?.phone}
                         </p>
                       </section>
                       <section className="order-total-lines">
-                        <div><span>Subtotal</span><strong>{formatMoney(order.subtotal, order.currency)}</strong></div>
-                        {order.discountAmount > 0 && <div><span>Discount</span><strong>−{formatMoney(order.discountAmount, order.currency)}</strong></div>}
-                        <div><span>Delivery</span><strong>{formatMoney(order.shippingAmount, order.currency)}</strong></div>
-                        <div className="order-total-lines__grand"><span>Total paid / due</span><strong>{formatMoney(order.totalAmount, order.currency)}</strong></div>
+                        <div>
+                          <span>Subtotal</span>
+                          <strong>{formatMoney(order.subtotal, order.currency)}</strong>
+                        </div>
+                        {order.discountAmount > 0 && (
+                          <div>
+                            <span>Discount</span>
+                            <strong>−{formatMoney(order.discountAmount, order.currency)}</strong>
+                          </div>
+                        )}
+                        <div>
+                          <span>Delivery</span>
+                          <strong>{formatMoney(order.shippingAmount, order.currency)}</strong>
+                        </div>
+                        <div className="order-total-lines__grand">
+                          <span>Total paid / due</span>
+                          <strong>{formatMoney(order.totalAmount, order.currency)}</strong>
+                        </div>
                       </section>
                     </div>
                   )}
@@ -421,28 +607,67 @@ function OrdersPage() {
 
         {!loading && pagination.totalOrders > 0 && (
           <footer className="orders-pagination">
-            <span>Page {page} of {totalPages} · {pagination.totalOrders} order(s)</span>
+            <span>
+              Page {page} of {totalPages} · {pagination.totalOrders} order(s)
+            </span>
             <div>
-              <button className="orders-button" type="button" disabled={page <= 1 || loading} onClick={() => setPage((current) => current - 1)}>Previous</button>
-              <button className="orders-button" type="button" disabled={page >= totalPages || loading} onClick={() => setPage((current) => current + 1)}>Next</button>
+              <button
+                className="orders-button"
+                type="button"
+                disabled={page <= 1 || loading}
+                onClick={() => setPage((current) => current - 1)}
+              >
+                Previous
+              </button>
+              <button
+                className="orders-button"
+                type="button"
+                disabled={page >= totalPages || loading}
+                onClick={() => setPage((current) => current + 1)}
+              >
+                Next
+              </button>
             </div>
           </footer>
         )}
       </section>
 
       {action && (
-        <div className="orders-modal-backdrop" role="presentation" onMouseDown={(event) => { if (event.target === event.currentTarget && !saving) setAction(null); }}>
+        <div
+          className="orders-modal-backdrop"
+          role="presentation"
+          onMouseDown={(event) => {
+            if (event.target === event.currentTarget && !saving) setAction(null);
+          }}
+        >
           <form className="orders-action-modal" onSubmit={submitOrderAction}>
-            <p className="orders-eyebrow">{action.type === "cancel-item" ? "CANCEL PRODUCT" : action.type === "cancel" ? "CANCEL ORDER" : "RETURN REQUEST"}</p>
-            <h2>{action.type === "cancel-item" ? "Cancel this product?" : action.type === "cancel" ? "Cancel this order?" : "Request a return"}</h2>
-            <p>{action.type === "cancel" ? action.order.orderNumber : `${action.item?.name || "Product"} · ${action.order.orderNumber}`}</p>
-            {(action.type === "cancel" || action.type === "cancel-item") && action.order.paymentStatus === "Paid" && (
-              <p className="orders-wallet-refund-note">
-                {action.type === "cancel"
-                  ? `Your paid amount (${formatMoney(action.order.totalAmount, action.order.currency)}) will be refunded to your ShopEase Wallet.`
-                  : "The paid amount for this product will be refunded to your ShopEase Wallet."}
-              </p>
-            )}
+            <p className="orders-eyebrow">
+              {action.type === "cancel-item"
+                ? "CANCEL PRODUCT"
+                : action.type === "cancel"
+                  ? "CANCEL ORDER"
+                  : "RETURN REQUEST"}
+            </p>
+            <h2>
+              {action.type === "cancel-item"
+                ? "Cancel this product?"
+                : action.type === "cancel"
+                  ? "Cancel this order?"
+                  : "Request a return"}
+            </h2>
+            <p>
+              {action.type === "cancel"
+                ? action.order.orderNumber
+                : `${action.item?.name || "Product"} · ${action.order.orderNumber}`}
+            </p>
+            {(action.type === "cancel" || action.type === "cancel-item") &&
+              action.order.paymentStatus === "Paid" && (
+                <p className="orders-wallet-refund-note">
+                  {action.type === "cancel"
+                    ? `Your paid amount (${formatMoney(action.order.totalAmount, action.order.currency)}) will be refunded to your ShopEase Wallet.`
+                    : "The paid amount for this product will be refunded to your ShopEase Wallet."}
+                </p>
+              )}
             <label>
               {action.type === "return" ? "Reason for return" : "Reason (optional)"}
               <textarea
@@ -454,9 +679,26 @@ function OrdersPage() {
               />
             </label>
             <div className="orders-action-modal__buttons">
-              <button className="orders-button" type="button" disabled={saving} onClick={() => setAction(null)}>Keep order</button>
-              <button className={`orders-button ${action.type === "return" ? "orders-button--primary" : "orders-button--danger"}`} type="submit" disabled={saving}>
-                {saving ? "Submitting…" : action.type === "cancel-item" ? "Confirm product cancellation" : action.type === "cancel" ? "Confirm cancellation" : "Submit return request"}
+              <button
+                className="orders-button"
+                type="button"
+                disabled={saving}
+                onClick={() => setAction(null)}
+              >
+                Keep order
+              </button>
+              <button
+                className={`orders-button ${action.type === "return" ? "orders-button--primary" : "orders-button--danger"}`}
+                type="submit"
+                disabled={saving}
+              >
+                {saving
+                  ? "Submitting…"
+                  : action.type === "cancel-item"
+                    ? "Confirm product cancellation"
+                    : action.type === "cancel"
+                      ? "Confirm cancellation"
+                      : "Submit return request"}
               </button>
             </div>
           </form>

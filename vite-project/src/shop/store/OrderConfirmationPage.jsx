@@ -9,7 +9,9 @@ function OrderConfirmationPage() {
   return (
     <main className="store-page order-confirmation">
       <section className="store-panel order-confirmation__card" aria-live="polite">
-        <div className="order-confirmation__mark" aria-hidden="true">✓</div>
+        <div className="order-confirmation__mark" aria-hidden="true">
+          ✓
+        </div>
         <span className="store-eyebrow">ORDER UPDATE</span>
         <h1>{order ? "Thank you for your order" : "Order details"}</h1>
         <p className="store-muted">

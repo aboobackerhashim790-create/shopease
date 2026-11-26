@@ -24,9 +24,7 @@ function toBackendDate(value) {
 function toDateTimeInput(value) {
   if (!value) return "";
   const date = new Date(value);
-  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000)
-    .toISOString()
-    .slice(0, 16);
+  return new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16);
 }
 
 function campaignState(campaign) {
@@ -110,7 +108,9 @@ export default function OfferCampaignsPage() {
         }
       } catch (error) {
         if (stillMounted) {
-          setMessage(error.response?.data?.message || error.message || "Could not load campaign data.");
+          setMessage(
+            error.response?.data?.message || error.message || "Could not load campaign data.",
+          );
           setIsError(true);
         }
       } finally {
@@ -219,7 +219,9 @@ export default function OfferCampaignsPage() {
       setMessage(response.data.message);
       await loadCampaigns();
     } catch (error) {
-      setMessage(error.response?.data?.message || error.message || "Could not change campaign status.");
+      setMessage(
+        error.response?.data?.message || error.message || "Could not change campaign status.",
+      );
       setIsError(true);
     }
   }
@@ -255,13 +257,37 @@ export default function OfferCampaignsPage() {
         <div className="offer-campaign-grid">
           <label>
             Campaign name
-            <input name="name" value={form.name} onChange={updateField} maxLength="100" placeholder="Christmas sale" aria-invalid={Boolean(fieldErrors.name)} aria-describedby={fieldErrors.name ? "campaign-name-error" : undefined} />
-            {fieldErrors.name && <small id="campaign-name-error" className="admin-field-error">{fieldErrors.name}</small>}
+            <input
+              name="name"
+              value={form.name}
+              onChange={updateField}
+              maxLength="100"
+              placeholder="Christmas sale"
+              aria-invalid={Boolean(fieldErrors.name)}
+              aria-describedby={fieldErrors.name ? "campaign-name-error" : undefined}
+            />
+            {fieldErrors.name && (
+              <small id="campaign-name-error" className="admin-field-error">
+                {fieldErrors.name}
+              </small>
+            )}
           </label>
           <label>
             Description
-            <input name="description" value={form.description} onChange={updateField} maxLength="300" placeholder="Holiday savings on selected gadgets" aria-invalid={Boolean(fieldErrors.description)} aria-describedby={fieldErrors.description ? "campaign-description-error" : undefined} />
-            {fieldErrors.description && <small id="campaign-description-error" className="admin-field-error">{fieldErrors.description}</small>}
+            <input
+              name="description"
+              value={form.description}
+              onChange={updateField}
+              maxLength="300"
+              placeholder="Holiday savings on selected gadgets"
+              aria-invalid={Boolean(fieldErrors.description)}
+              aria-describedby={fieldErrors.description ? "campaign-description-error" : undefined}
+            />
+            {fieldErrors.description && (
+              <small id="campaign-description-error" className="admin-field-error">
+                {fieldErrors.description}
+              </small>
+            )}
           </label>
           <label>
             Discount type
@@ -272,52 +298,128 @@ export default function OfferCampaignsPage() {
           </label>
           <label>
             Discount value {form.discountType === "percentage" ? "(%)" : "(₹)"}
-            <input name="discountValue" type="number" min="0.01" max={form.discountType === "percentage" ? "99" : undefined} step="0.01" value={form.discountValue} onChange={updateField} aria-invalid={Boolean(fieldErrors.discountValue)} aria-describedby={fieldErrors.discountValue ? "campaign-discount-error" : "campaign-discount-hint"} />
-            {form.discountType === "percentage" && <small id="campaign-discount-hint">Maximum percentage is 99%, so a positive-price item won’t become free.</small>}
-            {fieldErrors.discountValue && <small id="campaign-discount-error" className="admin-field-error">{fieldErrors.discountValue}</small>}
+            <input
+              name="discountValue"
+              type="number"
+              min="0.01"
+              max={form.discountType === "percentage" ? "99" : undefined}
+              step="0.01"
+              value={form.discountValue}
+              onChange={updateField}
+              aria-invalid={Boolean(fieldErrors.discountValue)}
+              aria-describedby={
+                fieldErrors.discountValue ? "campaign-discount-error" : "campaign-discount-hint"
+              }
+            />
+            {form.discountType === "percentage" && (
+              <small id="campaign-discount-hint">
+                Maximum percentage is 99%, so a positive-price item won’t become free.
+              </small>
+            )}
+            {fieldErrors.discountValue && (
+              <small id="campaign-discount-error" className="admin-field-error">
+                {fieldErrors.discountValue}
+              </small>
+            )}
           </label>
           <label>
             Apply offer to
-            <select name="appliesTo" value={form.appliesTo} onChange={updateField} aria-invalid={Boolean(fieldErrors.appliesTo)} aria-describedby={fieldErrors.appliesTo ? "campaign-applies-error" : undefined}>
+            <select
+              name="appliesTo"
+              value={form.appliesTo}
+              onChange={updateField}
+              aria-invalid={Boolean(fieldErrors.appliesTo)}
+              aria-describedby={fieldErrors.appliesTo ? "campaign-applies-error" : undefined}
+            >
               <option value="all">All products</option>
               <option value="category">One category</option>
               <option value="product">One product</option>
             </select>
-            {fieldErrors.appliesTo && <small id="campaign-applies-error" className="admin-field-error">{fieldErrors.appliesTo}</small>}
+            {fieldErrors.appliesTo && (
+              <small id="campaign-applies-error" className="admin-field-error">
+                {fieldErrors.appliesTo}
+              </small>
+            )}
           </label>
           {form.appliesTo === "category" && (
             <label>
               Category
-              <select name="categoryId" value={form.categoryId} onChange={updateField} aria-invalid={Boolean(fieldErrors.categoryId)} aria-describedby={fieldErrors.categoryId ? "campaign-category-error" : undefined}>
+              <select
+                name="categoryId"
+                value={form.categoryId}
+                onChange={updateField}
+                aria-invalid={Boolean(fieldErrors.categoryId)}
+                aria-describedby={fieldErrors.categoryId ? "campaign-category-error" : undefined}
+              >
                 <option value="">Choose a category</option>
                 {categories.map((category) => (
-                  <option key={category._id} value={category._id}>{category.name}</option>
+                  <option key={category._id} value={category._id}>
+                    {category.name}
+                  </option>
                 ))}
               </select>
-              {fieldErrors.categoryId && <small id="campaign-category-error" className="admin-field-error">{fieldErrors.categoryId}</small>}
+              {fieldErrors.categoryId && (
+                <small id="campaign-category-error" className="admin-field-error">
+                  {fieldErrors.categoryId}
+                </small>
+              )}
             </label>
           )}
           {form.appliesTo === "product" && (
             <label>
               Product
-              <select name="productId" value={form.productId} onChange={updateField} aria-invalid={Boolean(fieldErrors.productId)} aria-describedby={fieldErrors.productId ? "campaign-product-error" : undefined}>
+              <select
+                name="productId"
+                value={form.productId}
+                onChange={updateField}
+                aria-invalid={Boolean(fieldErrors.productId)}
+                aria-describedby={fieldErrors.productId ? "campaign-product-error" : undefined}
+              >
                 <option value="">Choose a product</option>
                 {products.map((product) => (
-                  <option key={product._id} value={product._id}>{product.name}</option>
+                  <option key={product._id} value={product._id}>
+                    {product.name}
+                  </option>
                 ))}
               </select>
-              {fieldErrors.productId && <small id="campaign-product-error" className="admin-field-error">{fieldErrors.productId}</small>}
+              {fieldErrors.productId && (
+                <small id="campaign-product-error" className="admin-field-error">
+                  {fieldErrors.productId}
+                </small>
+              )}
             </label>
           )}
           <label>
             Starts at
-            <input name="startsAt" type="datetime-local" value={form.startsAt} onChange={updateField} aria-invalid={Boolean(fieldErrors.startsAt)} aria-describedby={fieldErrors.startsAt ? "campaign-start-error" : undefined} />
-            {fieldErrors.startsAt && <small id="campaign-start-error" className="admin-field-error">{fieldErrors.startsAt}</small>}
+            <input
+              name="startsAt"
+              type="datetime-local"
+              value={form.startsAt}
+              onChange={updateField}
+              aria-invalid={Boolean(fieldErrors.startsAt)}
+              aria-describedby={fieldErrors.startsAt ? "campaign-start-error" : undefined}
+            />
+            {fieldErrors.startsAt && (
+              <small id="campaign-start-error" className="admin-field-error">
+                {fieldErrors.startsAt}
+              </small>
+            )}
           </label>
           <label>
             Ends at
-            <input name="endsAt" type="datetime-local" value={form.endsAt} onChange={updateField} aria-invalid={Boolean(fieldErrors.endsAt)} aria-describedby={fieldErrors.endsAt ? "campaign-end-error" : undefined} />
-            {fieldErrors.endsAt && <small id="campaign-end-error" className="admin-field-error">{fieldErrors.endsAt}</small>}
+            <input
+              name="endsAt"
+              type="datetime-local"
+              value={form.endsAt}
+              onChange={updateField}
+              aria-invalid={Boolean(fieldErrors.endsAt)}
+              aria-describedby={fieldErrors.endsAt ? "campaign-end-error" : undefined}
+            />
+            {fieldErrors.endsAt && (
+              <small id="campaign-end-error" className="admin-field-error">
+                {fieldErrors.endsAt}
+              </small>
+            )}
           </label>
         </div>
 
@@ -325,15 +427,28 @@ export default function OfferCampaignsPage() {
           <input name="active" type="checkbox" checked={form.active} onChange={updateField} />
           Campaign is enabled
         </label>
-        <p className="admin-commerce__hint">The campaign is only active between the selected dates. You can pause it at any time.</p>
+        <p className="admin-commerce__hint">
+          The campaign is only active between the selected dates. You can pause it at any time.
+        </p>
 
         <div className="admin-coupon-actions">
-          {editingId && <button type="button" onClick={resetForm}>Cancel edit</button>}
+          {editingId && (
+            <button type="button" onClick={resetForm}>
+              Cancel edit
+            </button>
+          )}
           <button className="admin-commerce__primary" disabled={saving}>
             {saving ? "Saving…" : editingId ? "Save changes" : "Create campaign"}
           </button>
         </div>
-        {message && <p className={`admin-commerce__message ${isError ? "is-error" : "is-success"}`} role="status">{message}</p>}
+        {message && (
+          <p
+            className={`admin-commerce__message ${isError ? "is-error" : "is-success"}`}
+            role="status"
+          >
+            {message}
+          </p>
+        )}
       </form>
 
       <div className="admin-commerce__panel">
@@ -346,29 +461,62 @@ export default function OfferCampaignsPage() {
         <div className="admin-commerce__table-wrap">
           <table className="admin-commerce__table">
             <thead>
-              <tr><th>CAMPAIGN</th><th>OFFER</th><th>APPLIES TO</th><th>SCHEDULE</th><th>STATUS</th><th>ACTIONS</th></tr>
+              <tr>
+                <th>CAMPAIGN</th>
+                <th>OFFER</th>
+                <th>APPLIES TO</th>
+                <th>SCHEDULE</th>
+                <th>STATUS</th>
+                <th>ACTIONS</th>
+              </tr>
             </thead>
             <tbody>
               {loading ? (
-                <tr><td colSpan="6">Loading campaigns…</td></tr>
+                <tr>
+                  <td colSpan="6">Loading campaigns…</td>
+                </tr>
               ) : campaigns.length === 0 ? (
-                <tr><td colSpan="6">No campaigns created yet.</td></tr>
-              ) : campaigns.map((campaign) => {
-                const state = campaignState(campaign);
-                return (
-                  <tr key={campaign._id}>
-                    <td><strong>{campaign.name}</strong><small>{campaign.description}</small></td>
-                    <td>{campaign.discountType === "percentage" ? `${campaign.discountValue}% off` : `₹${Number(campaign.discountValue).toLocaleString("en-IN")} off`}</td>
-                    <td>{getTargetLabel(campaign)}</td>
-                    <td>{formatDate(campaign.startsAt)}<small>Until {formatDate(campaign.endsAt)}</small></td>
-                    <td><span className={`admin-commerce__badge ${state === "Ended" || state === "Paused" ? "is-muted" : ""}`}>{state}</span></td>
-                    <td className="admin-commerce__actions">
-                      <button type="button" onClick={() => startEditing(campaign)}>Edit</button>
-                      <button type="button" onClick={() => toggleCampaign(campaign)}>{campaign.active ? "Pause" : "Enable"}</button>
-                    </td>
-                  </tr>
-                );
-              })}
+                <tr>
+                  <td colSpan="6">No campaigns created yet.</td>
+                </tr>
+              ) : (
+                campaigns.map((campaign) => {
+                  const state = campaignState(campaign);
+                  return (
+                    <tr key={campaign._id}>
+                      <td>
+                        <strong>{campaign.name}</strong>
+                        <small>{campaign.description}</small>
+                      </td>
+                      <td>
+                        {campaign.discountType === "percentage"
+                          ? `${campaign.discountValue}% off`
+                          : `₹${Number(campaign.discountValue).toLocaleString("en-IN")} off`}
+                      </td>
+                      <td>{getTargetLabel(campaign)}</td>
+                      <td>
+                        {formatDate(campaign.startsAt)}
+                        <small>Until {formatDate(campaign.endsAt)}</small>
+                      </td>
+                      <td>
+                        <span
+                          className={`admin-commerce__badge ${state === "Ended" || state === "Paused" ? "is-muted" : ""}`}
+                        >
+                          {state}
+                        </span>
+                      </td>
+                      <td className="admin-commerce__actions">
+                        <button type="button" onClick={() => startEditing(campaign)}>
+                          Edit
+                        </button>
+                        <button type="button" onClick={() => toggleCampaign(campaign)}>
+                          {campaign.active ? "Pause" : "Enable"}
+                        </button>
+                      </td>
+                    </tr>
+                  );
+                })
+              )}
             </tbody>
           </table>
         </div>

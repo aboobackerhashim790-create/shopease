@@ -6,8 +6,7 @@ const policyContent = {
   terms: {
     label: "SHOP EASE · TERMS",
     title: "Terms of Service",
-    intro:
-      "These terms explain the basic rules for using the current ShopEase application.",
+    intro: "These terms explain the basic rules for using the current ShopEase application.",
     sections: [
       [
         "Using ShopEase",
@@ -122,9 +121,7 @@ function LegalPage({ type, accountPage }) {
         <p className="legal-eyebrow">{policy.label}</p>
         <h1>{policy.title}</h1>
         <p className="legal-intro">{policy.intro}</p>
-        <p className="legal-review-note">
-          ShopEase project policy · Updated October 22, 2026
-        </p>
+        <p className="legal-review-note">ShopEase project policy · Updated October 22, 2026</p>
 
         <div className="legal-sections">
           {policy.sections.map(([heading, body], index) => (
@@ -143,9 +140,8 @@ function LegalPage({ type, accountPage }) {
             {accountPage ? "Return to my account" : "Return to create your account"} <span>→</span>
           </Link>
           <p>
-            These are starter policies for the current ShopEase project. Review
-            and customize them before using the app as a public commercial
-            service.
+            These are starter policies for the current ShopEase project. Review and customize them
+            before using the app as a public commercial service.
           </p>
         </div>
       </article>

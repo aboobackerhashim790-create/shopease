@@ -70,7 +70,12 @@ function Signup() {
       setTouched((current) => ({ ...current, [name]: true }));
       setFieldErrors((current) => ({
         ...current,
-        [name]: name === "agreed" ? (nextValue ? "" : "Please agree to the terms.") : validateField(name, String(nextValue), nextForm),
+        [name]:
+          name === "agreed"
+            ? nextValue
+              ? ""
+              : "Please agree to the terms."
+            : validateField(name, String(nextValue), nextForm),
         ...(name === "password" && touched.confirmPassword
           ? { confirmPassword: validateField("confirmPassword", form.confirmPassword, nextForm) }
           : {}),
@@ -87,8 +92,15 @@ function Signup() {
     const nextErrors = Object.fromEntries(
       fields.map((field) => [field, validateField(field, form[field], form)]),
     );
-    if (!form.agreed) nextErrors.agreed = "Please agree to the Terms of Service and Privacy Policy.";
-    setTouched({ fullName: true, email: true, password: true, confirmPassword: true, agreed: true });
+    if (!form.agreed)
+      nextErrors.agreed = "Please agree to the Terms of Service and Privacy Policy.";
+    setTouched({
+      fullName: true,
+      email: true,
+      password: true,
+      confirmPassword: true,
+      agreed: true,
+    });
     setFieldErrors(nextErrors);
 
     if (Object.values(nextErrors).some(Boolean)) {
@@ -122,9 +134,7 @@ function Signup() {
     } catch (error) {
       console.error("Sign-up error:", error);
       setFieldErrors(error.response?.data?.fieldErrors || {});
-      setMessage(
-        error.response?.data?.message || "Could not connect to the server.",
-      );
+      setMessage(error.response?.data?.message || "Could not connect to the server.");
     } finally {
       setSubmitting(false);
     }
@@ -156,9 +166,17 @@ function Signup() {
             onChange={handleChange}
             placeholder="♙  E.g. Maya Chen"
             aria-invalid={Boolean(fieldErrors.fullName)}
-            className={touched.fullName ? (fieldErrors.fullName ? "field-invalid" : "field-valid") : ""}
+            className={
+              touched.fullName ? (fieldErrors.fullName ? "field-invalid" : "field-valid") : ""
+            }
           />
-          {touched.fullName && <span className={`signup-field-feedback ${fieldErrors.fullName ? "is-error" : "is-success"}`}>{fieldErrors.fullName || "Looks good."}</span>}
+          {touched.fullName && (
+            <span
+              className={`signup-field-feedback ${fieldErrors.fullName ? "is-error" : "is-success"}`}
+            >
+              {fieldErrors.fullName || "Looks good."}
+            </span>
+          )}
 
           <label htmlFor="signupEmail">Email Address</label>
           <input
@@ -171,7 +189,13 @@ function Signup() {
             aria-invalid={Boolean(fieldErrors.email)}
             className={touched.email ? (fieldErrors.email ? "field-invalid" : "field-valid") : ""}
           />
-          {touched.email && <span className={`signup-field-feedback ${fieldErrors.email ? "is-error" : "is-success"}`}>{fieldErrors.email || "Looks good."}</span>}
+          {touched.email && (
+            <span
+              className={`signup-field-feedback ${fieldErrors.email ? "is-error" : "is-success"}`}
+            >
+              {fieldErrors.email || "Looks good."}
+            </span>
+          )}
 
           <div className="signup-label-row">
             <label htmlFor="referralCode">Referral code</label>
@@ -203,13 +227,29 @@ function Signup() {
               onChange={handleChange}
               placeholder="🔒  Min 8 chars, letter, number & symbol"
               aria-invalid={Boolean(fieldErrors.password)}
-              className={touched.password ? (fieldErrors.password ? "field-invalid" : "field-valid") : ""}
+              className={
+                touched.password ? (fieldErrors.password ? "field-invalid" : "field-valid") : ""
+              }
             />
-            <button type="button" aria-label={showPassword ? "Hide password" : "Show password"} onClick={() => setShowPassword((visible) => !visible)}>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />{showPassword && <path d="m3 3 18 18" />}</svg>
+            <button
+              type="button"
+              aria-label={showPassword ? "Hide password" : "Show password"}
+              onClick={() => setShowPassword((visible) => !visible)}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+                <circle cx="12" cy="12" r="3" />
+                {showPassword && <path d="m3 3 18 18" />}
+              </svg>
             </button>
           </div>
-          {touched.password && <span className={`signup-field-feedback ${fieldErrors.password ? "is-error" : "is-success"}`}>{fieldErrors.password || "Looks good."}</span>}
+          {touched.password && (
+            <span
+              className={`signup-field-feedback ${fieldErrors.password ? "is-error" : "is-success"}`}
+            >
+              {fieldErrors.password || "Looks good."}
+            </span>
+          )}
 
           <div className="signup-label-row password-label">
             <label htmlFor="confirmPassword">Confirm Password</label>
@@ -224,13 +264,33 @@ function Signup() {
               onChange={handleChange}
               placeholder="🔒  Re-enter your password"
               aria-invalid={Boolean(fieldErrors.confirmPassword)}
-              className={touched.confirmPassword ? (fieldErrors.confirmPassword ? "field-invalid" : "field-valid") : ""}
+              className={
+                touched.confirmPassword
+                  ? fieldErrors.confirmPassword
+                    ? "field-invalid"
+                    : "field-valid"
+                  : ""
+              }
             />
-            <button type="button" aria-label={showConfirmPassword ? "Hide password" : "Show password"} onClick={() => setShowConfirmPassword((visible) => !visible)}>
-              <svg viewBox="0 0 24 24" aria-hidden="true"><path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" /><circle cx="12" cy="12" r="3" />{showConfirmPassword && <path d="m3 3 18 18" />}</svg>
+            <button
+              type="button"
+              aria-label={showConfirmPassword ? "Hide password" : "Show password"}
+              onClick={() => setShowConfirmPassword((visible) => !visible)}
+            >
+              <svg viewBox="0 0 24 24" aria-hidden="true">
+                <path d="M2 12s3.6-7 10-7 10 7 10 7-3.6 7-10 7S2 12 2 12Z" />
+                <circle cx="12" cy="12" r="3" />
+                {showConfirmPassword && <path d="m3 3 18 18" />}
+              </svg>
             </button>
           </div>
-          {touched.confirmPassword && <span className={`signup-field-feedback ${fieldErrors.confirmPassword ? "is-error" : "is-success"}`}>{fieldErrors.confirmPassword || "Looks good."}</span>}
+          {touched.confirmPassword && (
+            <span
+              className={`signup-field-feedback ${fieldErrors.confirmPassword ? "is-error" : "is-success"}`}
+            >
+              {fieldErrors.confirmPassword || "Looks good."}
+            </span>
+          )}
 
           <label className="terms-row">
             <input
@@ -251,10 +311,18 @@ function Signup() {
               </Link>
             </span>
           </label>
-          {touched.agreed && fieldErrors.agreed && <span className="signup-field-feedback is-error">{fieldErrors.agreed}</span>}
+          {touched.agreed && fieldErrors.agreed && (
+            <span className="signup-field-feedback is-error">{fieldErrors.agreed}</span>
+          )}
 
           <button className="create-account-button" type="submit" disabled={submitting}>
-            {submitting ? "Creating account…" : <>Create Account <span>→</span></>}
+            {submitting ? (
+              "Creating account…"
+            ) : (
+              <>
+                Create Account <span>→</span>
+              </>
+            )}
           </button>
         </form>
         <div className="divider">

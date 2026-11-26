@@ -1,10 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
-import {
-  Link,
-  useNavigate,
-  useOutletContext,
-  useParams,
-} from "react-router-dom";
+import { Link, useNavigate, useOutletContext, useParams } from "react-router-dom";
 import API, { isSuccess } from "../../api/client.js";
 import StoreProductCard from "./StoreProductCard.jsx";
 import { formatPrice } from "./StoreProductCard.jsx";
@@ -13,11 +8,7 @@ import "./StorePages.css";
 function ProductDetailsPage() {
   const { slug } = useParams();
   const navigate = useNavigate();
-  const {
-    runProtectedAction,
-    refreshShopCounts,
-    wishlistIds = [],
-  } = useOutletContext();
+  const { runProtectedAction, refreshShopCounts, wishlistIds = [] } = useOutletContext();
   const [product, setProduct] = useState(null);
   const [relatedProducts, setRelatedProducts] = useState([]);
   const [variantId, setVariantId] = useState("");
@@ -35,24 +26,15 @@ function ProductDetailsPage() {
       if (!hasLoaded) setLoading(true);
       setError("");
       try {
-        const response = await API.get(
-          `/store/products/${encodeURIComponent(slug)}`,
-        );
+        const response = await API.get(`/store/products/${encodeURIComponent(slug)}`);
         if (!active) return;
         if (!isSuccess(response)) {
           if (response.status === 404) {
-            setError(
-              "This product is no longer available. Taking you back to the products…",
-            );
-            window.setTimeout(
-              () => navigate("/home/products", { replace: true }),
-              1800,
-            );
+            setError("This product is no longer available. Taking you back to the products…");
+            window.setTimeout(() => navigate("/home/products", { replace: true }), 1800);
             return;
           }
-          throw new Error(
-            response.data.message || "Could not load this product.",
-          );
+          throw new Error(response.data.message || "Could not load this product.");
         }
         setProduct(response.data.product);
         setRelatedProducts(response.data.relatedProducts || []);
@@ -78,9 +60,7 @@ function ProductDetailsPage() {
     };
   }, [slug, navigate]);
 
-  const selectedVariant = product?.variants?.find(
-    (variant) => variant._id === variantId,
-  );
+  const selectedVariant = product?.variants?.find((variant) => variant._id === variantId);
   const images = useMemo(() => {
     const optionImages = selectedVariant?.images || [];
     const mainImages = product?.images || [];
@@ -103,8 +83,7 @@ function ProductDetailsPage() {
     selectedVariant?.compareAtPrice ??
     product?.compareAtPrice;
   const stock = selectedVariant?.stockQuantity ?? product?.stockQuantity ?? 0;
-  const discount =
-    compareAtPrice > price ? Math.round((1 - price / compareAtPrice) * 100) : 0;
+  const discount = compareAtPrice > price ? Math.round((1 - price / compareAtPrice) * 100) : 0;
 
   function notifyWishlist(productToToggle) {
     runProtectedAction(() => {
@@ -114,9 +93,7 @@ function ProductDetailsPage() {
           ? await API.delete(`/store/wishlist/items/${productToToggle._id}`)
           : await API.post(`/store/wishlist/items/${productToToggle._id}`);
         if (!isSuccess(response))
-          throw new Error(
-            response.data.message || "Could not update your wishlist.",
-          );
+          throw new Error(response.data.message || "Could not update your wishlist.");
         await refreshShopCounts();
       })().catch((requestError) =>
         setNotice(requestError.response?.data?.message || requestError.message),
@@ -134,9 +111,7 @@ function ProductDetailsPage() {
           quantity: 1,
         });
         if (!isSuccess(response))
-          throw new Error(
-            response.data.message || "Could not add this item to your cart.",
-          );
+          throw new Error(response.data.message || "Could not add this item to your cart.");
         await refreshShopCounts();
         setNotice(`${productToAdd.name} added to your cart.`);
       })().catch((requestError) =>
@@ -147,15 +122,17 @@ function ProductDetailsPage() {
 
   function buyNow() {
     if (!product) return;
-    runProtectedAction(() => navigate("/home/checkout", {
-      state: {
-        buyNow: {
-          productId: product._id,
-          variantId: variantId || null,
-          quantity: 1,
+    runProtectedAction(() =>
+      navigate("/home/checkout", {
+        state: {
+          buyNow: {
+            productId: product._id,
+            variantId: variantId || null,
+            quantity: 1,
+          },
         },
-      },
-    }));
+      }),
+    );
   }
 
   if (loading)
@@ -176,9 +153,7 @@ function ProductDetailsPage() {
       </section>
     );
 
-  const isUnavailable = product.variants?.length
-    ? !selectedVariant
-    : stock <= 0;
+  const isUnavailable = product.variants?.length ? !selectedVariant : stock <= 0;
   return (
     <section className="store-page">
       <nav className="store-breadcrumbs" aria-label="Breadcrumb">
@@ -209,10 +184,7 @@ function ProductDetailsPage() {
           >
             {images[imageIndex] ? (
               <>
-                <img
-                  src={images[imageIndex]}
-                  alt={`${product.name} image ${imageIndex + 1}`}
-                />
+                <img src={images[imageIndex]} alt={`${product.name} image ${imageIndex + 1}`} />
                 {magnifier && (
                   <span
                     className="store-gallery__magnifier"
@@ -332,23 +304,20 @@ function ProductDetailsPage() {
               </ul>
             </div>
           )}
-          {product.specifications &&
-            Object.keys(product.specifications).length > 0 && (
-              <>
-                <h2>Specifications</h2>
-                <div className="store-specs">
-                  {Object.entries(product.specifications).map(
-                    ([key, value]) => (
-                      <div key={key}>
-                        <strong>{key}</strong>
-                        <br />
-                        {String(value)}
-                      </div>
-                    ),
-                  )}
-                </div>
-              </>
-            )}
+          {product.specifications && Object.keys(product.specifications).length > 0 && (
+            <>
+              <h2>Specifications</h2>
+              <div className="store-specs">
+                {Object.entries(product.specifications).map(([key, value]) => (
+                  <div key={key}>
+                    <strong>{key}</strong>
+                    <br />
+                    {String(value)}
+                  </div>
+                ))}
+              </div>
+            </>
+          )}
         </div>
       </div>
 
@@ -370,9 +339,17 @@ function ProductDetailsPage() {
                 wished={wishlistIds.includes(related._id)}
                 onAdd={addToCart}
                 onBuyNow={(relatedProduct, optionId) =>
-                  runProtectedAction(() => navigate("/home/checkout", {
-                    state: { buyNow: { productId: relatedProduct._id, variantId: optionId || null, quantity: 1 } },
-                  }))
+                  runProtectedAction(() =>
+                    navigate("/home/checkout", {
+                      state: {
+                        buyNow: {
+                          productId: relatedProduct._id,
+                          variantId: optionId || null,
+                          quantity: 1,
+                        },
+                      },
+                    }),
+                  )
                 }
                 onToggleWishlist={notifyWishlist}
               />

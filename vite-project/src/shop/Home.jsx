@@ -15,11 +15,7 @@ function getRequestErrorMessage(error, fallbackMessage) {
 
 function HomePage() {
   const navigate = useNavigate();
-  const {
-    runProtectedAction,
-    refreshShopCounts,
-    wishlistIds = [],
-  } = useOutletContext();
+  const { runProtectedAction, refreshShopCounts, wishlistIds = [] } = useOutletContext();
 
   const [categories, setCategories] = useState([]);
   const [latestProducts, setLatestProducts] = useState([]);
@@ -58,9 +54,7 @@ function HomePage() {
       setLoading(true);
       setError("");
 
-      const categoryFilter = selectedCategoryId
-        ? { categoryId: selectedCategoryId }
-        : {};
+      const categoryFilter = selectedCategoryId ? { categoryId: selectedCategoryId } : {};
 
       try {
         const [latestResponse, featuredResponse] = await Promise.all([
@@ -86,25 +80,16 @@ function HomePage() {
         if (!active) return;
 
         if (!isSuccess(latestResponse)) {
-          throw new Error(
-            latestResponse.data.message || "Could not load the storefront.",
-          );
+          throw new Error(latestResponse.data.message || "Could not load the storefront.");
         }
 
         setLatestProducts(latestResponse.data.products || []);
         setFeaturedProducts(
-          isSuccess(featuredResponse)
-            ? featuredResponse.data.products || []
-            : [],
+          isSuccess(featuredResponse) ? featuredResponse.data.products || [] : [],
         );
       } catch (requestError) {
         if (active) {
-          setError(
-            getRequestErrorMessage(
-              requestError,
-              "Could not load the storefront.",
-            ),
-          );
+          setError(getRequestErrorMessage(requestError, "Could not load the storefront."));
         }
       } finally {
         if (active) setLoading(false);
@@ -134,8 +119,7 @@ function HomePage() {
     .slice(0, HOME_SECTION_LIMIT);
 
   const selectedCategoryName =
-    categories.find((category) => category._id === selectedCategoryId)?.name ||
-    "this category";
+    categories.find((category) => category._id === selectedCategoryId)?.name || "this category";
 
   function openCategory(category) {
     setSelectedCategoryId(category?._id || "");
@@ -156,9 +140,7 @@ function HomePage() {
       await refreshShopCounts();
       setNotice(`${product.name} added to your cart.`);
     } catch (requestError) {
-      setNotice(
-        getRequestErrorMessage(requestError, "Could not add this item."),
-      );
+      setNotice(getRequestErrorMessage(requestError, "Could not add this item."));
     }
   }
 
@@ -167,9 +149,11 @@ function HomePage() {
   }
 
   function buyNow(product, variantId) {
-    runProtectedAction(() => navigate("/home/checkout", {
-      state: { buyNow: { productId: product._id, variantId: variantId || null, quantity: 1 } },
-    }));
+    runProtectedAction(() =>
+      navigate("/home/checkout", {
+        state: { buyNow: { productId: product._id, variantId: variantId || null, quantity: 1 } },
+      }),
+    );
   }
 
   async function sendWishlistRequest(product) {
@@ -180,16 +164,12 @@ function HomePage() {
         : await API.post(`/store/wishlist/items/${product._id}`);
 
       if (!isSuccess(response)) {
-        throw new Error(
-          response.data.message || "Could not update your wishlist.",
-        );
+        throw new Error(response.data.message || "Could not update your wishlist.");
       }
 
       await refreshShopCounts();
     } catch (requestError) {
-      setNotice(
-        getRequestErrorMessage(requestError, "Could not update your wishlist."),
-      );
+      setNotice(getRequestErrorMessage(requestError, "Could not update your wishlist."));
     }
   }
 
@@ -224,9 +204,7 @@ function HomePage() {
             ))}
           </div>
         ) : (
-          <p className="store-muted">
-            No products to show in this selection yet.
-          </p>
+          <p className="store-muted">No products to show in this selection yet.</p>
         )}
       </section>
     );
@@ -243,8 +221,8 @@ function HomePage() {
             <em>mindfully crafted.</em>
           </h1>
           <p>
-            Discover useful technology, thoughtful accessories, and reliable
-            gadgets for the way you work and live.
+            Discover useful technology, thoughtful accessories, and reliable gadgets for the way you
+            work and live.
           </p>
           <Link className="home-store-cta" to="/home/products">
             Explore collection <span>→</span>
@@ -291,9 +269,7 @@ function HomePage() {
             ? topLevelCategories.map((category) => (
                 <button
                   key={category._id}
-                  className={
-                    selectedCategoryId === category._id ? "is-selected" : ""
-                  }
+                  className={selectedCategoryId === category._id ? "is-selected" : ""}
                   type="button"
                   onClick={() => openCategory(category)}
                 >
@@ -301,9 +277,7 @@ function HomePage() {
                 </button>
               ))
             : !loading && (
-                <span className="store-muted">
-                  Categories will appear here when you add them.
-                </span>
+                <span className="store-muted">Categories will appear here when you add them.</span>
               )}
         </div>
       </section>
@@ -321,9 +295,7 @@ function HomePage() {
       )}
 
       {loading ? (
-        <div className="store-panel store-empty">
-          Loading the latest products…
-        </div>
+        <div className="store-panel store-empty">Loading the latest products…</div>
       ) : (
         <>
           {renderProductSection(

@@ -11,7 +11,11 @@ export function loadRazorpayCheckout() {
     script.onload = () => resolve();
     script.onerror = () => {
       razorpayScriptPromise = null;
-      reject(new Error("Could not load Razorpay Checkout. Check your internet connection and try again."));
+      reject(
+        new Error(
+          "Could not load Razorpay Checkout. Check your internet connection and try again.",
+        ),
+      );
     };
     document.body.appendChild(script);
   });

@@ -35,8 +35,7 @@ export default function cropImage(imageUrl, cropArea) {
       );
     };
 
-    image.onerror = () =>
-      reject(new Error("Could not read the selected image."));
+    image.onerror = () => reject(new Error("Could not read the selected image."));
     image.src = imageUrl;
   });
 }
