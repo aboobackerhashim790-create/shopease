@@ -4,7 +4,7 @@ import RefreshSession from "../models/RefreshSession.js";
 
 const TOKEN_COOKIE = "shopease.token";
 const REFRESH_COOKIE = "shopease.refresh";
-const ACCESS_LIFETIME_SECONDS = 60;
+const ACCESS_LIFETIME_SECONDS = 120*60;
 const REFRESH_LIFETIME_MS = 7 * 24 * 60 * 60 * 1000;
 
 function cookieOptions(maxAge, path = "/") {
