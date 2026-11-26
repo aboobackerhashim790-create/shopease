@@ -86,6 +86,7 @@ export default function HelpCenterPage() {
           <label>
             Issue category
             <select
+              name="category"
               value={form.category}
               onChange={(e) => setForm({ ...form, category: e.target.value })}
             >
@@ -97,6 +98,7 @@ export default function HelpCenterPage() {
           <label>
             Subject
             <input
+              name="subject"
               required
               maxLength={120}
               value={form.subject}
@@ -107,6 +109,7 @@ export default function HelpCenterPage() {
           <label>
             Your message
             <textarea
+              name="message"
               required
               maxLength={3000}
               rows={6}

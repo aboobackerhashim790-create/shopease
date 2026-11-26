@@ -131,6 +131,7 @@ export default function SupportRequestsPage() {
       <div className="admin-commerce__panel">
         <form className="admin-commerce__toolbar" onSubmit={submitSearch}>
           <input
+            name="search-input"
             aria-label="Search help requests"
             placeholder="Search subject, message, customer, or email"
             value={searchInput}
@@ -145,6 +146,7 @@ export default function SupportRequestsPage() {
           <label>
             Status
             <select
+              name="status"
               value={status}
               onChange={(event) => {
                 setStatus(event.target.value);
@@ -271,6 +273,7 @@ export default function SupportRequestsPage() {
             <label className="admin-support-status">
               Request status
               <select
+                name="selected-status"
                 value={selectedStatus}
                 onChange={(event) => {
                   const newStatus = event.target.value;
@@ -296,6 +299,7 @@ export default function SupportRequestsPage() {
             >
               <span>Reply to customer</span>
               <textarea
+                name="admin-response-text"
                 rows={4}
                 value={adminResponseText}
                 onChange={(e) => setAdminResponseText(e.target.value)}

@@ -103,6 +103,7 @@ function ProfileEditPage() {
             <label>
               Profile photo (JPG, PNG, or WebP; up to 5 MB)
               <input
+                name="profile-photo"
                 type="file"
                 accept="image/jpeg,image/png,image/webp"
                 onChange={(event) => setPhoto(event.target.files?.[0] || null)}
@@ -116,6 +117,7 @@ function ProfileEditPage() {
             <label>
               Full name
               <input
+                name="full-name"
                 value={fullName}
                 onChange={(event) => setFullName(event.target.value)}
                 minLength={2}
@@ -125,7 +127,7 @@ function ProfileEditPage() {
             </label>
             <label>
               Email address
-              <input value={user.email || ""} readOnly />
+              <input name="email" value={user.email || ""} readOnly />
             </label>
             <div className="profile-edit-actions">
               <Link to="/home/account">Cancel</Link>

@@ -127,6 +127,7 @@ export default function AdminOrders() {
       <div className="admin-commerce__panel">
         <form className="admin-commerce__toolbar" onSubmit={submitSearch}>
           <input
+            name="search-input"
             aria-label="Search orders"
             placeholder="Search by order number, customer, or email"
             value={searchInput}
@@ -139,6 +140,7 @@ export default function AdminOrders() {
           <label>
             Status{" "}
             <select
+              name="status"
               value={status}
               onChange={(event) => {
                 setStatus(event.target.value);
@@ -154,6 +156,7 @@ export default function AdminOrders() {
           <label>
             Payment{" "}
             <select
+              name="payment-status"
               value={paymentStatus}
               onChange={(event) => {
                 setPaymentStatus(event.target.value);
@@ -249,6 +252,7 @@ export default function AdminOrders() {
             <label>
               Rows{" "}
               <select
+                name="limit"
                 value={limit}
                 onChange={(event) => {
                   setLimit(Number(event.target.value));
@@ -342,6 +346,7 @@ export default function AdminOrders() {
                   <label className="admin-commerce__item-status">
                     Product status
                     <select
+                      name="item-status"
                       value={itemStatus}
                       disabled={
                         busyId === selectedOrder._id ||
@@ -464,6 +469,7 @@ export default function AdminOrders() {
             <label>
               Message to customer
               <textarea
+                name="return-message"
                 value={returnMessage}
                 onChange={(event) => setReturnMessage(event.target.value)}
                 maxLength={500}

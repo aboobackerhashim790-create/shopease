@@ -39,6 +39,7 @@ function ProductFormModal({
           <label>
             Product name
             <input
+              name="name"
               className={fieldClass("name")}
               value={form.name}
               aria-invalid={Boolean(fieldErrors.name)}
@@ -49,6 +50,7 @@ function ProductFormModal({
           <label>
             Slug
             <input
+              name="slug"
               className={fieldClass("slug")}
               value={form.slug}
               aria-invalid={Boolean(fieldErrors.slug)}
@@ -59,6 +61,7 @@ function ProductFormModal({
           <label>
             Category
             <select
+              name="category-id"
               className={fieldClass("categoryId")}
               value={form.categoryId}
               aria-invalid={Boolean(fieldErrors.categoryId)}
@@ -76,6 +79,7 @@ function ProductFormModal({
           <label>
             Brand
             <input
+              name="brand"
               value={form.brand}
               onChange={(event) => onFieldChange("brand", event.target.value)}
             />
@@ -83,6 +87,7 @@ function ProductFormModal({
           <label>
             SKU (optional)
             <input
+              name="sku"
               value={form.sku}
               onChange={(event) => onFieldChange("sku", event.target.value)}
               disabled={form.variants.length > 0}
@@ -91,6 +96,7 @@ function ProductFormModal({
           <label>
             Price (₹)
             <input
+              name="price"
               className={fieldClass("price")}
               type="number"
               min="0"
@@ -106,6 +112,7 @@ function ProductFormModal({
           <label>
             Compare-at price (₹)
             <input
+              name="compare-at-price"
               className={fieldClass("compareAtPrice")}
               type="number"
               min="0"
@@ -120,6 +127,7 @@ function ProductFormModal({
           <label>
             Stock quantity
             <input
+              name="stock-quantity"
               className={fieldClass("stockQuantity")}
               type="number"
               min="0"
@@ -136,6 +144,7 @@ function ProductFormModal({
         <label>
           Description
           <textarea
+            name="description"
             className={fieldClass("description")}
             rows="4"
             value={form.description}
@@ -150,6 +159,7 @@ function ProductFormModal({
             Choose 2–5 JPG, PNG, or WebP files. They will be uploaded to Cloudinary when you save.
           </span>
           <input
+            name="images"
             className={fieldClass("images")}
             type="file"
             accept="image/jpeg,image/png,image/webp"
@@ -217,6 +227,7 @@ function ProductFormModal({
                 <label>
                   Variant SKU
                   <input
+                    name="sku"
                     className={fieldClass(`variants.${index}.sku`)}
                     value={variant.sku}
                     aria-invalid={Boolean(fieldErrors[`variants.${index}.sku`])}
@@ -227,6 +238,7 @@ function ProductFormModal({
                 <label>
                   Color
                   <input
+                    name="color"
                     value={variant.color}
                     onChange={(event) => onUpdateVariant(index, "color", event.target.value)}
                   />
@@ -234,6 +246,7 @@ function ProductFormModal({
                 <label>
                   Storage
                   <input
+                    name="storage"
                     value={variant.storage}
                     onChange={(event) => onUpdateVariant(index, "storage", event.target.value)}
                   />
@@ -241,6 +254,7 @@ function ProductFormModal({
                 <label>
                   Price (₹)
                   <input
+                    name="price"
                     className={fieldClass(`variants.${index}.price`)}
                     type="number"
                     min="0"
@@ -254,6 +268,7 @@ function ProductFormModal({
                 <label>
                   Compare-at price (₹)
                   <input
+                    name="compare-at-price"
                     className={fieldClass(`variants.${index}.compareAtPrice`)}
                     type="number"
                     min="0"
@@ -269,6 +284,7 @@ function ProductFormModal({
                 <label>
                   Stock quantity
                   <input
+                    name="stock-quantity"
                     className={fieldClass(`variants.${index}.stockQuantity`)}
                     type="number"
                     min="0"
@@ -284,6 +300,7 @@ function ProductFormModal({
               </div>
               <label className="products-variant-active-control">
                 <input
+                  name="active"
                   type="checkbox"
                   checked={variant.active}
                   onChange={(event) => onUpdateVariant(index, "active", event.target.checked)}
@@ -297,6 +314,7 @@ function ProductFormModal({
                   you save.
                 </span>
                 <input
+                  name="images"
                   className={fieldClass(`variants.${index}.images`)}
                   type="file"
                   accept="image/jpeg,image/png,image/webp"
@@ -361,6 +379,7 @@ function ProductFormModal({
         </section>
         <label className="products-featured-control">
           <input
+            name="is-featured"
             type="checkbox"
             checked={form.isFeatured}
             onChange={(event) => setForm({ ...form, isFeatured: event.target.checked })}

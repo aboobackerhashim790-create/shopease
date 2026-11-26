@@ -471,6 +471,7 @@ function UserManagementPage() {
       <section className="customers-panel">
         <form className="customers-toolbar" onSubmit={handleSearch}>
           <input
+            name="search-input"
             className="customers-search"
             value={searchInput}
             onChange={(event) => setSearchInput(event.target.value)}
@@ -488,6 +489,7 @@ function UserManagementPage() {
           <label className="status-control">
             <span>Show</span>
             <select
+              name="status"
               value={status}
               onChange={(event) => {
                 setStatus(event.target.value);
@@ -502,6 +504,7 @@ function UserManagementPage() {
           <label className="sort-control">
             <span>Sort by</span>
             <select
+              name="sort"
               value={sort}
               onChange={(event) => {
                 setSort(event.target.value);
@@ -513,6 +516,7 @@ function UserManagementPage() {
             </select>
           </label>
           <input
+            name="from-date"
             type="date"
             aria-label="Registered from date"
             value={fromDate}
@@ -521,6 +525,7 @@ function UserManagementPage() {
             }}
           />
           <input
+            name="to-date"
             type="date"
             aria-label="Registered to date"
             value={toDate}
@@ -602,6 +607,7 @@ function UserManagementPage() {
             <label>
               Page
               <select
+                name="page"
                 value={page}
                 onChange={(event) => updatePage(Number(event.target.value))}
                 disabled={loading}
@@ -617,6 +623,7 @@ function UserManagementPage() {
             <label>
               Show
               <select
+                name="limit"
                 value={limit}
                 onChange={(event) => updateLimit(Number(event.target.value))}
                 disabled={loading}

@@ -219,6 +219,7 @@ function ProductsPage() {
         <label className="store-field">
           Search products
           <input
+            name="search"
             value={filters.search}
             onChange={(event) => changeFilter("search", event.target.value)}
             placeholder="Name, brand, SKU..."
@@ -227,6 +228,7 @@ function ProductsPage() {
         <label className="store-field">
           Category
           <select
+            name="category-id"
             value={filters.categoryId}
             onChange={(event) => changeFilter("categoryId", event.target.value)}
           >
@@ -241,6 +243,7 @@ function ProductsPage() {
         <label className="store-field">
           Minimum price
           <input
+            name="min-price"
             type="number"
             min="0"
             value={filters.minPrice}
@@ -251,6 +254,7 @@ function ProductsPage() {
         <label className="store-field">
           Maximum price
           <input
+            name="max-price"
             type="number"
             min="0"
             value={filters.maxPrice}
@@ -261,6 +265,7 @@ function ProductsPage() {
         <label className="store-field">
           Sort by
           <select
+            name="sort"
             value={filters.sort}
             onChange={(event) => changeFilter("sort", event.target.value)}
           >

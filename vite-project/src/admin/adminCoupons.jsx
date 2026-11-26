@@ -163,6 +163,7 @@ export default function AdminCoupons() {
           <label>
             Coupon code
             <input
+              name="code"
               value={form.code}
               maxLength="40"
               aria-invalid={Boolean(fieldErrors.code)}
@@ -175,6 +176,7 @@ export default function AdminCoupons() {
           <label>
             Description
             <input
+              name="description"
               value={form.description}
               onChange={(e) => updateField("description", e.target.value)}
               placeholder="Welcome discount"
@@ -183,6 +185,7 @@ export default function AdminCoupons() {
           <label>
             Discount type
             <select
+              name="discount-type"
               value={form.discountType}
               aria-invalid={Boolean(fieldErrors.discountType)}
               aria-describedby={fieldErrors.discountType ? "coupon-discountType-error" : undefined}
@@ -196,6 +199,7 @@ export default function AdminCoupons() {
           <label>
             Discount value
             <input
+              name="discount-value"
               type="number"
               step="0.01"
               value={form.discountValue}
@@ -210,6 +214,7 @@ export default function AdminCoupons() {
           <label>
             Minimum subtotal (₹)
             <input
+              name="minimum-subtotal"
               type="number"
               step="0.01"
               value={form.minimumSubtotal}
@@ -224,6 +229,7 @@ export default function AdminCoupons() {
           <label>
             Maximum discount (₹)
             <input
+              name="maximum-discount"
               type="number"
               step="0.01"
               value={form.maximumDiscount}
@@ -239,6 +245,7 @@ export default function AdminCoupons() {
           <label>
             Usage limit
             <input
+              name="usage-limit"
               type="number"
               step="1"
               value={form.usageLimit}
@@ -252,6 +259,7 @@ export default function AdminCoupons() {
           <label>
             Starts on
             <input
+              name="starts-at"
               type="date"
               value={form.startsAt}
               aria-invalid={Boolean(fieldErrors.startsAt)}
@@ -263,6 +271,7 @@ export default function AdminCoupons() {
           <label>
             Expires on
             <input
+              name="expires-at"
               type="date"
               value={form.expiresAt}
               aria-invalid={Boolean(fieldErrors.expiresAt)}
@@ -274,6 +283,7 @@ export default function AdminCoupons() {
         </div>
         <label className="admin-coupon-active">
           <input
+            name="first-order-only"
             type="checkbox"
             checked={form.firstOrderOnly}
             onChange={(e) => setForm({ ...form, firstOrderOnly: e.target.checked })}
@@ -286,6 +296,7 @@ export default function AdminCoupons() {
         </p>
         <label className="admin-coupon-active">
           <input
+            name="active"
             type="checkbox"
             checked={form.active}
             onChange={(e) => setForm({ ...form, active: e.target.checked })}
@@ -318,6 +329,7 @@ export default function AdminCoupons() {
           }}
         >
           <input
+            name="search-text"
             placeholder="Search coupon code"
             value={searchText}
             onChange={(e) => setSearchText(e.target.value)}
@@ -337,6 +349,7 @@ export default function AdminCoupons() {
           <label>
             Status{" "}
             <select
+              name="status"
               value={status}
               onChange={(e) => {
                 setStatus(e.target.value);
@@ -424,6 +437,7 @@ export default function AdminCoupons() {
             <label>
               Rows{" "}
               <select
+                name="limit"
                 value={limit}
                 onChange={(e) => {
                   setLimit(Number(e.target.value));

@@ -237,6 +237,7 @@ function AccountSettingsPage() {
             <label>
               New email address
               <input
+                name="new-email"
                 type="email"
                 value={newEmail}
                 onChange={(event) => setNewEmail(event.target.value)}
@@ -247,11 +248,12 @@ function AccountSettingsPage() {
             <>
               <label>
                 New email address
-                <input type="email" value={newEmail} readOnly />
+                <input name="new-email" type="email" value={newEmail} readOnly />
               </label>
               <label>
                 Verification code
                 <input
+                  name="email-code"
                   inputMode="numeric"
                   autoComplete="one-time-code"
                   maxLength={6}

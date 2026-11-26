@@ -125,6 +125,7 @@ function VerifyEmail() {
           <label className="verify-email-label">
             Email address
             <input
+              name="email"
               type="email"
               value={email}
               onChange={(event) => setEmail(event.target.value)}
@@ -146,6 +147,7 @@ function VerifyEmail() {
             ))}
 
             <input
+              name="code"
               ref={codeInputRef}
               className="otp-hidden-input"
               aria-label="6-digit verification code"

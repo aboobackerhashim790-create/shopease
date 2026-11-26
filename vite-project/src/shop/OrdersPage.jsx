@@ -237,6 +237,7 @@ function OrdersPage() {
           <label className="orders-search">
             <span className="sr-only">Search orders</span>
             <input
+              name="search-input"
               value={searchInput}
               onChange={(event) => setSearchInput(event.target.value)}
               placeholder="Search by order number or product"
@@ -251,6 +252,7 @@ function OrdersPage() {
           <label className="orders-status-filter">
             <span>Status</span>
             <select
+              name="status"
               value={status}
               onChange={(event) => {
                 setStatus(event.target.value);
@@ -671,6 +673,7 @@ function OrdersPage() {
             <label>
               {action.type === "return" ? "Reason for return" : "Reason (optional)"}
               <textarea
+                name="reason"
                 value={reason}
                 onChange={(event) => setReason(event.target.value)}
                 maxLength={action.type === "return" ? 1000 : 500}

@@ -535,6 +535,7 @@ function AdminProducts() {
           }}
         >
           <input
+            name="search-input"
             type="search"
             aria-label="Search products"
             placeholder="Search by product, brand, SKU, or slug"
@@ -561,6 +562,7 @@ function AdminProducts() {
           <label className="products-filter">
             Category
             <select
+              name="category-id"
               value={categoryId}
               onChange={(event) => {
                 setCategoryId(event.target.value);
@@ -580,6 +582,7 @@ function AdminProducts() {
           <label className="products-filter">
             Status
             <select
+              name="status-filter"
               value={statusFilter}
               onChange={(event) => {
                 setStatusFilter(event.target.value);
@@ -596,6 +599,7 @@ function AdminProducts() {
           <label>
             Sort by
             <select
+              name="sort"
               value={sort}
               onChange={(event) => {
                 setSort(event.target.value);
@@ -704,6 +708,7 @@ function AdminProducts() {
             <label>
               Page
               <select
+                name="page"
                 value={page}
                 onChange={(event) => setPage(Number(event.target.value))}
                 disabled={loading}
@@ -719,6 +724,7 @@ function AdminProducts() {
             <label>
               Products per page
               <select
+                name="limit"
                 value={limit}
                 onChange={(event) => {
                   setLimit(Number(event.target.value));

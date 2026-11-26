@@ -237,6 +237,7 @@ function ProductDetailsPage() {
             <label className="store-field">
               Select option
               <select
+                name="variant-id"
                 value={variantId}
                 onChange={(event) => {
                   setVariantId(event.target.value);

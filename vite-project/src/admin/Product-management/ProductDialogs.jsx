@@ -46,6 +46,7 @@ function ProductCropModal({
         <label className="products-crop-zoom">
           Zoom
           <input
+            name="crop-zoom"
             type="range"
             min="1"
             max="3"

@@ -328,6 +328,7 @@ function CategoryManagementPage() {
             <label>
               Name
               <input
+                name="name"
                 value={form.name}
                 onChange={(event) => {
                   const value = event.target.value;
@@ -355,6 +356,7 @@ function CategoryManagementPage() {
             <label>
               Slug
               <input
+                name="slug"
                 value={form.slug}
                 onChange={(event) => {
                   const value = event.target.value;
@@ -382,6 +384,7 @@ function CategoryManagementPage() {
             <label>
               Sort order
               <input
+                name="sort-order"
                 type="number"
                 value={form.sortOrder}
                 onChange={(event) => {
@@ -414,6 +417,7 @@ function CategoryManagementPage() {
             <label>
               Parent category
               <select
+                name="parent-category-id"
                 value={form.parentCategoryId}
                 onChange={(event) => setForm({ ...form, parentCategoryId: event.target.value })}
               >
@@ -477,6 +481,7 @@ function CategoryManagementPage() {
               <label className="category-search">
                 <span className="sr-only">Search categories</span>
                 <input
+                  name="search-input"
                   type="search"
                   placeholder="Search categories by name"
                   value={searchInput}
@@ -501,6 +506,7 @@ function CategoryManagementPage() {
             <label className="category-sort">
               <span>Sort by</span>
               <select
+                name="sort-option"
                 value={sortOption}
                 onChange={(event) => {
                   setSortOption(event.target.value);
@@ -519,6 +525,7 @@ function CategoryManagementPage() {
             <label className="category-sort">
               <span>Status</span>
               <select
+                name="status"
                 value={status}
                 onChange={(event) => {
                   setStatus(event.target.value);
@@ -618,6 +625,7 @@ function CategoryManagementPage() {
               <label>
                 page number
                 <select
+                  name="page"
                   value={page}
                   onChange={(event) => setPage(Number(event.target.value))}
                   disabled={loading}
@@ -632,6 +640,7 @@ function CategoryManagementPage() {
               <label>
                 Products per page
                 <select
+                  name="limit"
                   value={limit}
                   onChange={(event) => {
                     setLimit(Number(event.target.value));

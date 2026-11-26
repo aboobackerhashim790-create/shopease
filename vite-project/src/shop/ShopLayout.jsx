@@ -111,6 +111,7 @@ function ShopLayout() {
             }}
           >
             <input
+              name="search-text"
               aria-label="Search products"
               placeholder="Search gadgets..."
               value={searchText}
