@@ -29,20 +29,13 @@ async function refreshSession() {
       // The access token may still be expired; try the refresh cookie next.
     }
 
-    const response = await API.post(
-      "/auth/refresh",
-      {},
-      { _skipAuthRefresh: true },
-    );
+    const response = await API.post("/auth/refresh", {}, { _skipAuthRefresh: true });
     return response.status >= 200 && response.status < 300;
   }
 
   // Web Locks coordinate refreshes across tabs, not just requests in this tab.
   if (globalThis.navigator?.locks?.request) {
-    return globalThis.navigator.locks.request(
-      "shopease-auth-refresh",
-      refreshIfNeeded,
-    );
+    return globalThis.navigator.locks.request("shopease-auth-refresh", refreshIfNeeded);
   }
 
   // Keep the existing same-tab coordination for browsers without Web Locks.
@@ -56,7 +49,9 @@ API.interceptors.response.use(async (response) => {
   if (response.status !== 401) return response;
 
   const config = response.config;
-  const requestPath = new URL(config.url, config.baseURL).pathname;
+  // Axios keeps the endpoint in config.url. Avoid resolving it with URL(),
+  // because some deployment baseURL values are not valid URL constructor bases.
+  const requestPath = (config.url || "").split(/[?#]/, 1)[0];
   const isAuthRequest =
     /\/auth\/(login|google|refresh|logout|signup|verify-email|resend-verification|forgot-password|reset-password)$/.test(
       requestPath,
