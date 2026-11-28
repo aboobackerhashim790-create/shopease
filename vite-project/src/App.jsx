@@ -32,6 +32,7 @@ import CheckoutPage from "./shop/store/CheckoutPage.jsx";
 import OrderConfirmationPage from "./shop/store/OrderConfirmationPage.jsx";
 import HelpCenterPage from "./shop/HelpCenterPage.jsx";
 import SupportRequestsPage from "./admin/support/SupportRequestsPage.jsx";
+import ReturnRequestsPage from "./admin/ReturnRequestsPage.jsx";
 function App() {
   return (
     <BrowserRouter>
@@ -113,6 +114,7 @@ function App() {
           <Route path="/admin/users/:userId" element={<AdminUserDetail />} />
           <Route path="/admin/products" element={<AdminProducts />} />
           <Route path="/admin/orders" element={<AdminOrders />} />
+          <Route path="/admin/returns" element={<ReturnRequestsPage />} />
           <Route path="/admin/support" element={<SupportRequestsPage />} />
           <Route path="/admin/coupons" element={<AdminCoupons />} />
           <Route path="/admin/offer-campaigns" element={<OfferCampaignsPage />} />

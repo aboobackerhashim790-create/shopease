@@ -289,6 +289,97 @@ export async function updateOrderItemStatus(input) {
   }
 }
 
+export async function listReturnRequests(input) {
+  try {
+    const query = input.query || {};
+    const page = Math.max(Number.parseInt(query.page, 10) || 1, 1);
+    const limit = Math.min(Math.max(Number.parseInt(query.limit, 10) || 10, 1), 50);
+    const status = String(query.status || "Requested");
+    const allowedStatuses = ["Requested", "Accepted", "Rejected"];
+    if (status !== "all" && !allowedStatuses.includes(status)) {
+      return bad(400, "Choose a valid return request status.");
+    }
+    const statuses = status === "all" ? allowedStatuses : [status];
+    const filter = {
+      $or: [
+        { "items.returnRequest.status": { $in: statuses } },
+        { "returnRequest.status": { $in: statuses } },
+      ],
+    };
+    const orders = await Order.find(filter)
+      .sort({ updatedAt: -1, _id: -1 })
+      .populate("userId", "fullName email")
+      .lean();
+    const requests = [];
+    for (const order of orders) {
+      const customer = {
+        fullName: order.userId?.fullName || "Customer",
+        email: order.userId?.email || "",
+      };
+      for (const [itemIndex, item] of (order.items || []).entries()) {
+        const returnRequest = item.returnRequest;
+        if (!returnRequest || !statuses.includes(returnRequest.status)) continue;
+        requests.push({
+          id: `${order._id}:${itemIndex}`,
+          orderId: order._id,
+          orderNumber: order.orderNumber,
+          itemIndex,
+          item: {
+            name: item.name,
+            sku: item.sku,
+            options: item.options,
+            image: item.image,
+            quantity: item.quantity,
+            itemTotal: item.itemTotal,
+          },
+          customer,
+          paymentMethod: order.paymentMethod,
+          paymentStatus: order.paymentStatus,
+          currency: order.currency,
+          returnRequest,
+        });
+      }
+      const legacyRequest = order.returnRequest;
+      if (legacyRequest && statuses.includes(legacyRequest.status)) {
+        requests.push({
+          id: `${order._id}:order`,
+          orderId: order._id,
+          orderNumber: order.orderNumber,
+          itemIndex: null,
+          item: null,
+          customer,
+          paymentMethod: order.paymentMethod,
+          paymentStatus: order.paymentStatus,
+          currency: order.currency,
+          returnRequest: legacyRequest,
+        });
+      }
+    }
+    requests.sort(
+      (left, right) =>
+        new Date(right.returnRequest.requestedAt || 0) -
+        new Date(left.returnRequest.requestedAt || 0),
+    );
+    const totalRequests = requests.length;
+    const start = (page - 1) * limit;
+    return {
+      status: 200,
+      body: {
+        requests: requests.slice(start, start + limit),
+        pagination: {
+          page,
+          limit,
+          totalRequests,
+          totalPages: Math.ceil(totalRequests / limit),
+        },
+      },
+    };
+  } catch (error) {
+    console.error("Admin list return requests error:", error);
+    return bad(500, "Could not load return requests.");
+  }
+}
+
 export async function reviewReturn(input) {
   const { orderId } = input.params;
   const decision = input.body?.decision;

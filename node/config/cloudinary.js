@@ -54,6 +54,23 @@ function uploadProductImage(buffer) {
   });
 }
 
+function uploadReturnEvidenceImage(buffer) {
+  if (!configureCloudinary()) {
+    throw new Error("Cloudinary is not configured.");
+  }
+  return new Promise((resolve, reject) => {
+    cloudinary.uploader
+      .upload_stream(
+        {
+          folder: "shopease/returns",
+          resource_type: "image",
+        },
+        (error, result) => (error ? reject(error) : resolve(result)),
+      )
+      .end(buffer);
+  });
+}
+
 async function deleteCloudinaryImage(publicId) {
   if (!publicId || !configureCloudinary()) return;
   await cloudinary.uploader.destroy(publicId, { resource_type: "image" });
@@ -63,5 +80,6 @@ export {
   isCloudinaryConfigured,
   uploadProfileImage,
   uploadProductImage,
+  uploadReturnEvidenceImage,
   deleteCloudinaryImage,
 };

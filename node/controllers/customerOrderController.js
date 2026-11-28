@@ -6,6 +6,7 @@ function makeServiceInput(req) {
     params: req.params || {},
     query: req.query || {},
     user: req.user,
+    files: req.files || [],
   };
 }
 

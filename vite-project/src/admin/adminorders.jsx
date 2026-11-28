@@ -1,4 +1,5 @@
 import { useEffect, useState } from "react";
+import { Link } from "react-router-dom";
 import API, { isSuccess } from "../api/client.js";
 import "./adminCommerce.css";
 
@@ -24,8 +25,6 @@ export default function AdminOrders() {
   const [loading, setLoading] = useState(true);
   const [busyId, setBusyId] = useState("");
   const [message, setMessage] = useState("");
-  const [returnReview, setReturnReview] = useState(null);
-  const [returnMessage, setReturnMessage] = useState("");
 
   async function loadOrders() {
     setLoading(true);
@@ -73,31 +72,6 @@ export default function AdminOrders() {
     }
   }
 
-  async function decideReturn(order, itemIndex, decision) {
-    setBusyId(order._id);
-    setMessage("");
-    try {
-      const payload =
-        itemIndex === null
-          ? { decision, adminMessage: returnMessage }
-          : { decision, itemIndex, adminMessage: returnMessage };
-      const response = await API.patch(`/admin/orders/${order._id}/return`, payload);
-      if (!isSuccess(response))
-        throw new Error(response.data.message || "Could not review return.");
-      await loadOrders();
-      if (selectedOrder?._id === order._id) {
-        setSelectedOrder({ ...response.data.order, userId: selectedOrder.userId });
-      }
-      setReturnReview(null);
-      setReturnMessage("");
-      setMessage(response.data.message);
-    } catch (error) {
-      setMessage(error.response?.data?.message || error.message);
-    } finally {
-      setBusyId("");
-    }
-  }
-
   function submitSearch(event) {
     event.preventDefault();
     setPage(1);
@@ -117,7 +91,7 @@ export default function AdminOrders() {
         <div>
           <span>ADMINISTRATION</span>
           <h1>Order management</h1>
-          <p>Review orders, update fulfillment, process returns, and track refunds.</p>
+          <p>Review orders, update fulfillment, and track refunds. Manage return requests on the Returns page.</p>
         </div>
         <div className="admin-commerce__metric">
           <small>Total orders</small>
@@ -209,9 +183,12 @@ export default function AdminOrders() {
                         {order.orderNumber}
                       </button>
                       <small>{order.items?.length || 0} product line(s)</small>
-                      {order.items?.some((item) => item.returnRequest?.status === "Requested") && (
+                      {(order.returnRequest?.status === "Requested" ||
+                        order.items?.some((item) => item.returnRequest?.status === "Requested")) && (
                         <small className="admin-commerce__return-needed">
-                          Return request needs review
+                          <Link to="/admin/returns">
+                            Return request needs review
+                          </Link>
                         </small>
                       )}
                     </td>
@@ -365,128 +342,13 @@ export default function AdminOrders() {
                       ))}
                     </select>
                   </label>
-                  {item.returnRequest?.status === "Requested" && (
-                    <div className="admin-commerce__return">
-                      <button
-                        type="button"
-                        disabled={busyId === selectedOrder._id}
-                        onClick={() => {
-                          setReturnReview({
-                            order: selectedOrder,
-                            itemIndex: index,
-                            decision: "Rejected",
-                          });
-                          setReturnMessage("");
-                        }}
-                      >
-                        Reject return
-                      </button>
-                      <button
-                        type="button"
-                        className="admin-commerce__primary"
-                        disabled={busyId === selectedOrder._id}
-                        onClick={() => {
-                          setReturnReview({
-                            order: selectedOrder,
-                            itemIndex: index,
-                            decision: "Accepted",
-                          });
-                          setReturnMessage("");
-                        }}
-                      >
-                        Accept return
-                      </button>
-                    </div>
-                  )}
                 </div>
               );
             })}
             <div className="admin-commerce__detail-total">
               Order total <strong>{money(selectedOrder.totalAmount)}</strong>
             </div>
-            {selectedOrder.returnRequest?.status === "Requested" && (
-              <div className="admin-commerce__return">
-                <h3>Legacy order return request</h3>
-                <p>{selectedOrder.returnRequest.reason}</p>
-                <button
-                  type="button"
-                  disabled={busyId === selectedOrder._id}
-                  onClick={() => {
-                    setReturnReview({
-                      order: selectedOrder,
-                      itemIndex: null,
-                      decision: "Rejected",
-                    });
-                    setReturnMessage("");
-                  }}
-                >
-                  Reject
-                </button>
-                <button
-                  type="button"
-                  className="admin-commerce__primary"
-                  disabled={busyId === selectedOrder._id}
-                  onClick={() => {
-                    setReturnReview({
-                      order: selectedOrder,
-                      itemIndex: null,
-                      decision: "Accepted",
-                    });
-                    setReturnMessage("");
-                  }}
-                >
-                  Accept
-                </button>
-              </div>
-            )}
           </section>
-        </div>
-      )}
-      {returnReview && (
-        <div
-          className="admin-commerce__backdrop"
-          onMouseDown={(event) => {
-            if (event.target === event.currentTarget && !busyId) setReturnReview(null);
-          }}
-        >
-          <form
-            className="admin-commerce__dialog"
-            onSubmit={(event) => {
-              event.preventDefault();
-              decideReturn(returnReview.order, returnReview.itemIndex, returnReview.decision);
-            }}
-          >
-            <button
-              className="admin-commerce__close"
-              type="button"
-              onClick={() => setReturnReview(null)}
-            >
-              ×
-            </button>
-            <span>RETURN DECISION</span>
-            <h2>{returnReview.decision} return</h2>
-            <p>This message will be shown to the customer with the return result.</p>
-            <label>
-              Message to customer
-              <textarea
-                name="return-message"
-                value={returnMessage}
-                onChange={(event) => setReturnMessage(event.target.value)}
-                maxLength={500}
-                required
-                rows={4}
-              />
-            </label>
-            <button
-              className="admin-commerce__primary"
-              type="submit"
-              disabled={busyId === returnReview.order._id || !returnMessage.trim()}
-            >
-              {busyId === returnReview.order._id
-                ? "Saving…"
-                : `Confirm ${returnReview.decision.toLowerCase()}`}
-            </button>
-          </form>
         </div>
       )}
     </section>

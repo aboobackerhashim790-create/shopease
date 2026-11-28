@@ -547,6 +547,23 @@
   min-height: 105px;
   resize: vertical;
 }
+.orders-action-modal select,
+.orders-action-modal input[type="file"] {
+  width: 100%;
+  min-height: 42px;
+  padding: 9px 12px;
+  border: 1px solid #d5e0d9;
+  border-radius: 9px;
+  background: #fff;
+  color: #17231f;
+  font: inherit;
+  font-size: 13px;
+}
+.orders-action-modal label small {
+  color: #687771;
+  font-size: 12px;
+  font-weight: 400;
+}
 .orders-action-modal__buttons {
   display: flex;
   justify-content: flex-end;

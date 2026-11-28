@@ -1,5 +1,13 @@
 import mongoose from "mongoose";
 
+const returnEvidenceImageSchema = new mongoose.Schema(
+  {
+    url: { type: String, required: true },
+    publicId: { type: String, default: "" },
+  },
+  { _id: false },
+);
+
 const orderItemSchema = new mongoose.Schema(
   {
     productId: {
@@ -47,6 +55,8 @@ const orderItemSchema = new mongoose.Schema(
     returnRequest: {
       status: { type: String, enum: ["None", "Requested", "Accepted", "Rejected"], default: "None" },
       reason: { type: String, trim: true, default: "" },
+      description: { type: String, trim: true, maxlength: 1000, default: "" },
+      evidenceImages: { type: [returnEvidenceImageSchema], default: [] },
       requestedAt: { type: Date, default: null },
       reviewedAt: { type: Date, default: null },
       adminMessage: { type: String, trim: true, maxlength: 500, default: "" },
@@ -182,6 +192,8 @@ const orderSchema = new mongoose.Schema(
         default: "None",
       },
       reason: { type: String, trim: true, default: "" },
+      description: { type: String, trim: true, maxlength: 1000, default: "" },
+      evidenceImages: { type: [returnEvidenceImageSchema], default: [] },
       requestedAt: { type: Date, default: null },
       reviewedAt: { type: Date, default: null },
       adminMessage: { type: String, trim: true, maxlength: 500, default: "" },

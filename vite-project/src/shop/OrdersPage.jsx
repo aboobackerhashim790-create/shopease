@@ -136,6 +136,8 @@ function OrdersPage() {
   const [expandedOrderId, setExpandedOrderId] = useState("");
   const [action, setAction] = useState(null);
   const [reason, setReason] = useState("");
+  const [returnDescription, setReturnDescription] = useState("");
+  const [returnImages, setReturnImages] = useState([]);
   const [saving, setSaving] = useState(false);
 
   const loadOrders = useCallback(async () => {
@@ -183,24 +185,28 @@ function OrdersPage() {
     setError("");
     setSuccessMessage("");
     try {
-      const response =
-        action.type === "cancel"
-          ? await API.patch(`/profile/orders/${action.order._id}/cancel`, {
-              reason,
-            })
-          : action.type === "cancel-item"
-            ? await API.patch(
-                `/profile/orders/${action.order._id}/items/${action.itemIndex}/cancel`,
-                { reason },
-              )
-            : await API.post(`/profile/orders/${action.order._id}/return`, {
-                reason,
-                itemIndex: action.itemIndex,
-              });
+      let response;
+      if (action.type === "cancel") {
+        response = await API.patch(`/profile/orders/${action.order._id}/cancel`, { reason });
+      } else if (action.type === "cancel-item") {
+        response = await API.patch(
+          `/profile/orders/${action.order._id}/items/${action.itemIndex}/cancel`,
+          { reason },
+        );
+      } else {
+        const body = new FormData();
+        body.append("reason", reason);
+        body.append("description", returnDescription);
+        body.append("itemIndex", String(action.itemIndex));
+        returnImages.forEach((image) => body.append("images", image));
+        response = await API.post(`/profile/orders/${action.order._id}/return`, body);
+      }
       if (!isSuccess(response))
         throw new Error(response.data?.message || "Could not update this order.");
       setAction(null);
       setReason("");
+      setReturnDescription("");
+      setReturnImages([]);
       setSuccessMessage(response.data?.message || "Order updated.");
       await loadOrders();
     } catch (requestError) {
@@ -539,6 +545,8 @@ function OrdersPage() {
                                               item,
                                             });
                                             setReason("");
+                                            setReturnDescription("");
+                                            setReturnImages([]);
                                           }}
                                         >
                                           Request return
@@ -670,17 +678,82 @@ function OrdersPage() {
                     : "The paid amount for this product will be refunded to your ShopEase Wallet."}
                 </p>
               )}
-            <label>
-              {action.type === "return" ? "Reason for return" : "Reason (optional)"}
-              <textarea
-                name="reason"
-                value={reason}
-                onChange={(event) => setReason(event.target.value)}
-                maxLength={action.type === "return" ? 1000 : 500}
-                required={action.type === "return"}
-                rows={4}
-              />
-            </label>
+            {action.type === "return" ? (
+              <>
+                <label>
+                  Return reason
+                  <select
+                    name="reason"
+                    value={reason}
+                    onChange={(event) => setReason(event.target.value)}
+                    required
+                  >
+                    <option value="">Choose a reason</option>
+                    <option value="Damaged item">Damaged item</option>
+                    <option value="Defective item">Defective item</option>
+                    <option value="Wrong item received">Wrong item received</option>
+                    <option value="Missing parts or accessories">
+                      Missing parts or accessories
+                    </option>
+                    <option value="Item not as described">Item not as described</option>
+                    <option value="Other">Other</option>
+                  </select>
+                </label>
+                <label>
+                  Describe the issue
+                  <textarea
+                    name="description"
+                    value={returnDescription}
+                    onChange={(event) => setReturnDescription(event.target.value)}
+                    maxLength={1000}
+                    required
+                    rows={4}
+                    placeholder="Tell us what happened with this product."
+                  />
+                </label>
+                <label>
+                  Add photos (optional, up to 4 images)
+                  <input
+                    name="images"
+                    type="file"
+                    accept="image/jpeg,image/png,image/webp"
+                    multiple
+                    onChange={(event) => {
+                      const files = Array.from(event.target.files || []);
+                      const invalidFile = files.find(
+                        (file) =>
+                          !["image/jpeg", "image/png", "image/webp"].includes(file.type) ||
+                          file.size > 5 * 1024 * 1024,
+                      );
+                      if (files.length > 4) {
+                        setError("You can attach up to 4 images.");
+                        setReturnImages([]);
+                      } else if (invalidFile) {
+                        setError("Choose JPG, PNG, or WebP images up to 5 MB each.");
+                        setReturnImages([]);
+                      } else {
+                        setError("");
+                        setReturnImages(files);
+                      }
+                    }}
+                  />
+                  {returnImages.length > 0 && (
+                    <small>{returnImages.map((image) => image.name).join(", ")}</small>
+                  )}
+                </label>
+              </>
+            ) : (
+              <label>
+                Reason (optional)
+                <textarea
+                  name="reason"
+                  value={reason}
+                  onChange={(event) => setReason(event.target.value)}
+                  maxLength={500}
+                  rows={4}
+                />
+              </label>
+            )}
             <div className="orders-action-modal__buttons">
               <button
                 className="orders-button"

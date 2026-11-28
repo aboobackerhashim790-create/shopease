@@ -17,6 +17,7 @@ import {
   getDashboardSummary,
   listOrders,
   getOrder,
+  listReturnRequests,
   updateOrderStatus,
   updateOrderItemStatus,
   reviewReturn,
@@ -92,6 +93,7 @@ router.patch(
   updateProduct,
 );
 router.get("/orders", requireSignedIn, requireAdmin, listOrders);
+router.get("/returns", requireSignedIn, requireAdmin, listReturnRequests);
 router.get("/orders/:orderId", requireSignedIn, requireAdmin, getOrder);
 router.patch("/orders/:orderId/status", requireSignedIn, requireAdmin, updateOrderStatus);
 router.patch("/orders/:orderId/items/:itemIndex/status", requireSignedIn, requireAdmin, updateOrderItemStatus);

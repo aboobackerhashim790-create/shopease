@@ -155,6 +155,13 @@
   color: #9b5a19;
   font-weight: 700;
 }
+.admin-commerce__return-needed a {
+  color: inherit;
+  text-decoration: none;
+}
+.admin-commerce__return-needed a:hover {
+  text-decoration: underline;
+}
 .admin-commerce__actions {
   display: flex;
   gap: 7px;

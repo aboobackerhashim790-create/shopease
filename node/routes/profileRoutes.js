@@ -18,6 +18,7 @@ import {
   requireActiveCustomer,
 } from "../middleware/authMiddleware.js";
 import uploadProfileImage from "../middleware/profileImageUpload.js";
+import uploadReturnEvidence from "../middleware/returnEvidenceUpload.js";
 import { otpLimiter } from "../middleware/rateLimiters.js";
 import {
   listMyOrders,
@@ -45,7 +46,7 @@ router.delete("/addresses/:addressId", deleteAddress);
 router.get("/orders", listMyOrders);
 router.get("/orders/:orderId", getMyOrder);
 router.patch("/orders/:orderId/cancel", cancelMyOrder);
-router.post("/orders/:orderId/return", requestMyOrderReturn);
+router.post("/orders/:orderId/return", uploadReturnEvidence.array("images", 4), requestMyOrderReturn);
 router.patch("/orders/:orderId/items/:itemIndex/cancel", cancelMyOrderItem);
 router.get("/support", listMySupportRequests);
 router.post("/support", createSupportRequest);

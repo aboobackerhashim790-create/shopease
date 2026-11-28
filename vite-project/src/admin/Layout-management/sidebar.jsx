@@ -31,6 +31,9 @@ function Sidebar() {
         <NavLink to="/admin/orders" className="admin-nav-link">
           <span>▤</span> Orders
         </NavLink>
+        <NavLink to="/admin/returns" className="admin-nav-link">
+          <span>↩</span> Returns
+        </NavLink>
         <NavLink to="/admin/support" className="admin-nav-link">
           <span>✉</span> Help requests
         </NavLink>

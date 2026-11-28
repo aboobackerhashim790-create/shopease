@@ -99,6 +99,11 @@ export async function getOrder(req, res) {
   return res.status(result.status).json(result.body);
 }
 
+export async function listReturnRequests(req, res) {
+  const result = await adminOrderService.listReturnRequests(makeServiceInput(req));
+  return res.status(result.status).json(result.body);
+}
+
 export async function updateOrderStatus(req, res) {
   const result = await adminOrderService.updateOrderStatus(makeServiceInput(req));
   return res.status(result.status).json(result.body);

@@ -3,6 +3,7 @@ import Order from "../models/Order.js";
 import Product from "../models/Product.js";
 import Wallet from "../models/Wallet.js";
 import { releaseCouponUse } from "./couponPricing.js";
+import { deleteCloudinaryImage, uploadReturnEvidenceImage } from "../config/cloudinary.js";
 
 const ORDER_STATUSES = [
   "Pending",
@@ -243,14 +244,28 @@ export async function cancelMyOrder(input) {
 }
 
 export async function requestMyOrderReturn(input) {
+  let uploadedEvidence = [];
   try {
     const { orderId } = input.params;
     const itemIndex = Number(input.body?.itemIndex);
     const reason = typeof input.body?.reason === "string" ? input.body.reason.trim() : "";
+    const description = typeof input.body?.description === "string"
+      ? input.body.description.trim()
+      : "";
+    const allowedReasons = [
+      "Damaged item",
+      "Defective item",
+      "Wrong item received",
+      "Missing parts or accessories",
+      "Item not as described",
+      "Other",
+    ];
     if (!mongoose.isValidObjectId(orderId)) return invalid(400, "Invalid order ID.");
     if (!Number.isInteger(itemIndex) || itemIndex < 0) return invalid(400, "Choose a valid product to return.");
-    if (!reason) return invalid(400, "Please enter a reason for the return.");
-    if (reason.length > 1000) return invalid(400, "Return reason must be 1,000 characters or fewer.");
+    if (!allowedReasons.includes(reason)) return invalid(400, "Choose a valid reason for the return.");
+    if (!description) return invalid(400, "Please describe why you want to return this product.");
+    if (description.length > 1000) return invalid(400, "Return description must be 1,000 characters or fewer.");
+    if ((input.files || []).length > 4) return invalid(400, "You can attach up to 4 images.");
 
     const order = await Order.findOne({ _id: orderId, userId: input.user._id });
     if (!order) return invalid(404, "Order not found.");
@@ -276,14 +291,27 @@ export async function requestMyOrderReturn(input) {
       return invalid(409, "A return request has already been submitted for this product.");
     }
 
+    for (const file of input.files || []) {
+      const uploaded = await uploadReturnEvidenceImage(file.buffer);
+      uploadedEvidence.push({ url: uploaded.secure_url, publicId: uploaded.public_id });
+    }
+
     item.returnRequest.status = "Requested";
     item.returnRequest.reason = reason;
+    item.returnRequest.description = description;
+    item.returnRequest.evidenceImages = uploadedEvidence;
     item.returnRequest.requestedAt = new Date();
     item.returnRequest.reviewedAt = null;
     await order.save();
 
+    uploadedEvidence = [];
     return { status: 201, body: { message: `Return request submitted for ${item.name}.`, order } };
   } catch (error) {
+    await Promise.all(
+      uploadedEvidence.map((image) =>
+        deleteCloudinaryImage(image.publicId).catch(() => undefined),
+      ),
+    );
     console.error("Request customer order return error:", error);
     return invalid(500, "Could not submit the return request.");
   }
