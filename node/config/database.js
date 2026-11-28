@@ -13,7 +13,6 @@ async function connectDatabase() {
     { $setOnInsert: { sequence: 999 } },
     { upsert: true },
   );
-  console.log("Connected to MongoDB.");
 }
 
 export default connectDatabase;

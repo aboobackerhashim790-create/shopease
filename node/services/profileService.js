@@ -240,7 +240,6 @@ async function requestEmailChange(input) {
         runValidators: true,
       },
     );
-    console.log(`[PROFILE] Email change verification code for ${newEmail}: ${code}`);
     await sendEmailMessage({
       to: newEmail,
       subject: "Verify your new ShopEase email",

@@ -83,8 +83,6 @@ async function resendVerification(input) {
       };
     }
     const code = String(randomInt(100000, 1000000));
-    console.log(`[AUTH] Resend verification code for ${email}: ${code}`);
-    // Only replace the stored code and consume a resend after the email is accepted.
     await sendEmailMessage({
       to: email,
       subject: "Your new ShopEase verification code",
@@ -303,7 +301,6 @@ async function signup(input) {
         runValidators: true,
       },
     );
-    console.log(`[AUTH] Verification code for ${normalizedEmail}: ${code}`);
     try {
       await sendEmailMessage({
         to: normalizedEmail,
@@ -764,8 +761,6 @@ async function requestPasswordReset(input) {
       };
     }
     const code = String(randomInt(100000, 1000000));
-    console.log(`[AUTH] Password reset code for ${email}: ${code}`);
-    // Send first so a mail failure does not replace a working code or use a resend.
     await sendEmailMessage({
       to: email,
       subject: "Your ShopEase password reset code",

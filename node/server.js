@@ -9,7 +9,6 @@ connectDatabase()
   .then(() => {
     mailer
       .verify()
-      .then(() => console.log("Gmail SMTP is ready for OTP emails."))
       .catch((error) => {
         console.error("Gmail SMTP check failed:", {
           code: error.code,
@@ -18,9 +17,7 @@ connectDatabase()
         });
       });
 
-    app.listen(PORT, () => {
-      console.log(`Backend running at http://localhost:${PORT}`);
-    });
+    app.listen(PORT);
   })
   .catch((error) => {
     console.error("Could not connect to MongoDB:", error.message);
