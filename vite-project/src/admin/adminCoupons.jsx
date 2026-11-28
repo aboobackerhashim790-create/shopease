@@ -122,7 +122,18 @@ export default function AdminCoupons() {
       setMessage(error.response?.data?.message || error.message);
     }
   }
-
+ async function deleteCoupen(coupon){
+  setMessage("");
+  try {
+    const response = await API.delete(`/admin/coupons/${coupon._id}`);
+    if(!isSuccess(response))
+    throw new Error(response.data.message || "Could not delete coupon.");
+    setMessage(response.data.message);
+    await loadCoupons();
+  } catch (error) {
+     setMessage(error.response?.data?.message || error.message);
+  }
+ }
   function resetForm() {
     setForm(blankCoupon);
     setEditing(null);
@@ -420,8 +431,10 @@ export default function AdminCoupons() {
                     <td className="admin-commerce__actions">
                       <button onClick={() => editCoupon(coupon)}>Edit</button>
                       <button onClick={() => toggleCoupon(coupon)}>
+                      
                         {coupon.active ? "Deactivate" : "Activate"}
                       </button>
+                       <button onClick={()=>deleteCoupen(coupon) }>Delete</button> 
                     </td>
                   </tr>
                 ))

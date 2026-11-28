@@ -104,6 +104,21 @@ export async function createCoupon(input) {
     return result(500, "Could not create coupon.");
   }
 }
+export async function deleteCoupon(input){
+ const { couponId } = input.params;
+  if (!mongoose.isValidObjectId(couponId)) return result(400, "Invalid coupon ID.");
+  try {
+       await Coupon.findByIdAndDelete(couponId);
+      return { status: 200, body: { message: "Coupon deleted." } };
+  } catch (error) {
+    if (error.code === 11000) {
+      const message = "That coupon code is already in use.";
+      return result(409, message, { errors: { code: message } });
+    }
+    console.error("Update coupon error:", error);
+    return result(500, "Could not update coupon.");
+  }
+}
 
 export async function updateCoupon(input) {
   const { couponId } = input.params;

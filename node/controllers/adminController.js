@@ -118,6 +118,10 @@ export async function listCoupons(req, res) {
   const result = await adminCouponService.listCoupons(makeServiceInput(req));
   return res.status(result.status).json(result.body);
 }
+export async function deleteCoupon(req, res) {
+  const result = await adminCouponService.deleteCoupon(makeServiceInput(req));
+  return res.status(result.status).json(result.body);
+}
 
 export async function createCoupon(req, res) {
   const result = await adminCouponService.createCoupon(makeServiceInput(req));

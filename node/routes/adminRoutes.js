@@ -28,6 +28,7 @@ import {
   createOfferCampaign,
   updateOfferCampaign,
   setOfferCampaignActive,
+  deleteCoupon
 } from "../controllers/adminController.js";
 import { requireSignedIn, requireAdmin } from "../middleware/authMiddleware.js";
 import uploadProductImageFiles from "../middleware/productImageUpload.js";
@@ -98,6 +99,7 @@ router.patch("/orders/:orderId/return", requireSignedIn, requireAdmin, reviewRet
 router.get("/coupons", requireSignedIn, requireAdmin, listCoupons);
 router.post("/coupons", requireSignedIn, requireAdmin, createCoupon);
 router.patch("/coupons/:couponId", requireSignedIn, requireAdmin, updateCoupon);
+router.delete("/coupons/:couponId",requireSignedIn,requireAdmin,deleteCoupon)
 router.patch("/coupons/:couponId/active", requireSignedIn, requireAdmin, setCouponActive);
 router.get("/offer-campaigns", requireSignedIn, requireAdmin, listOfferCampaigns);
 router.post("/offer-campaigns", requireSignedIn, requireAdmin, createOfferCampaign);
